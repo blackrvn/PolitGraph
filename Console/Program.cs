@@ -12,5 +12,5 @@ string name1 = args[0];
 string name2 = args[1];
 
 
-Console.WriteLine(parliamentService.GetMemberIdAsync(name1));
-Console.WriteLine(parliamentService.GetMemberIdAsync(name2));
+Console.WriteLine(parliamentService.GetMemberDataAsync(name1).Result?.FirstOrDefault());
+Console.WriteLine(parliamentService.GetMemberDataAsync(name2).Result?.FirstOrDefault());

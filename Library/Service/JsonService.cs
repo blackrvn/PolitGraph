@@ -1,4 +1,4 @@
-﻿namespace PolitGraph.Service
+﻿namespace Library.Service
 {
     internal static class JsonService
     {
