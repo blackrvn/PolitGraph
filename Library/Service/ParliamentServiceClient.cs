@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 
 namespace Library.Service
 {
+
     public class ParliamentServiceClient
     {
         private readonly HttpClient _httpClient;
@@ -21,15 +22,24 @@ namespace Library.Service
             {
                 return null;
             }
-            var result = await _httpClient.GetFromJsonAsync<Result<Affair>>($"persons/{memberId}/affairs");
-            return result?.Data;
+            var affairOverview = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{memberId}/affairs?limit=300");
+            var affairs = new List<Affair>();
+            foreach (var affair in affairOverview?.Items ?? [])
+            {
+                var affairDetail = await _httpClient.GetFromJsonAsync<Affair>($"affairs/{affair.Id}?expand=texts");
+                if (affairDetail != null)
+                {
+                    affairs.Add(affairDetail);
+                }
+            }
+            return affairs;
         }
 
         public async Task<Member?> GetMemberIdAsync(string memberName)
         {
-            var result = await _httpClient.GetFromJsonAsync<Result<Member>>($"persons/?search={memberName}&search_mode=exact");
+            var result = await _httpClient.GetFromJsonAsync<DataContainer<Member>>($"persons/?search={memberName}&search_mode=exact&active=true");
             // Return the first matching member or null if not found
-            return result?.Data.FirstOrDefault();
+            return result?.Items.FirstOrDefault();
         }
 
 

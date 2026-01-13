@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "politgraph.cli": {
+      "commandName": "Project",
+      "commandLineArgs": "\"Cyril Aellen\" \"Pascal Broulis\""
+    }
+  }
+}
