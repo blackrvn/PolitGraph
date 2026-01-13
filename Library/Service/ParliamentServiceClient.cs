@@ -4,24 +4,42 @@ using System.Net.Http.Json;
 
 namespace Library.Service
 {
-
+    /// <summary>
+    /// Service client for interacting with the Swiss Parliament Open Data API.
+    /// </summary>
+    /// <remarks>
+    /// API Documentation: <see cref="Constants.API"/>
+    /// </remarks>
     public class ParliamentServiceClient
     {
         private readonly HttpClient _httpClient;
+        /// <summary>
+        /// <inheritdoc cref="ParliamentServiceClient"/>
+        /// </summary>
         public ParliamentServiceClient()
         {
             _httpClient = new();
-            _httpClient.BaseAddress = new Uri("https://api.openparldata.ch/v1/");
+            _httpClient.BaseAddress = new Uri(Constants.API);
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
+
+        /// <summary>
+        /// Returns the affairs for a given member name.
+        /// </summary>
+        /// <remarks>
+        /// Calls the <see cref="GetMemberIdAsync(string)"/> method to retrieve the member ID first,"/>
+        /// </remarks>
+        /// <param name="memberName"></param>
+        /// <returns></returns>
         public async Task<List<Affair>?> GetMemberDataAsync(string memberName)
         {
-            var memberId = (await GetMemberIdAsync(memberName))?.Id;
+            var memberId = await GetMemberIdAsync(memberName);
             if (memberId == null)
             {
                 return null;
             }
+            // TODO: Imlement paging to retrieve all affairs if more than 300
             var affairOverview = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{memberId}/affairs?limit=300");
             var affairs = new List<Affair>();
             foreach (var affair in affairOverview?.Items ?? [])
@@ -35,11 +53,23 @@ namespace Library.Service
             return affairs;
         }
 
-        public async Task<Member?> GetMemberIdAsync(string memberName)
+        /// <summary>
+        /// Returns the member ID for a given member name.
+        /// </summary>
+        /// <remarks>
+        /// Uses search_mode=exact to get an exact match.
+        /// Uses active=true to only search for active members.
+        /// </remarks>
+        /// <param name="memberName">
+        /// The name of the requested member
+        /// </param>
+        /// <returns>
+        /// Return the first matching member id or null if not found
+        /// </returns>
+        public async Task<int?> GetMemberIdAsync(string memberName)
         {
             var result = await _httpClient.GetFromJsonAsync<DataContainer<Member>>($"persons/?search={memberName}&search_mode=exact&active=true");
-            // Return the first matching member or null if not found
-            return result?.Items.FirstOrDefault();
+            return result?.Items.FirstOrDefault()?.Id;
         }
 
 
