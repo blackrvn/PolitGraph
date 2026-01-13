@@ -1,9 +1,8 @@
-﻿using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 
-namespace PolitGraph.Service
+namespace Library.Service
 {
-    internal class ParliamentServiceClient
+    public class ParliamentServiceClient
     {
         private readonly HttpClient _httpClient;
         public ParliamentServiceClient()
