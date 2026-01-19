@@ -31,11 +31,12 @@ foreach (var name in args)
 
 var store = new VectorStore(members);
 store.Transform();
-foreach (var member in members)
-{
-    var vectors = store.GetSparseVectors(member);
-    Console.WriteLine(vectors);
-}
+var vectors1 = store.GetSparseVectors(members[0]);
+var vectors2 = store.GetSparseVectors(members[1]);
+var mean1 = VectorCalculationService.SparseVectorMean(vectors1);
+var mean2 = VectorCalculationService.SparseVectorMean(vectors2);
+
+Console.WriteLine(VectorCalculationService.CosineSimilarity(mean1, mean2));
 
 
 static void PrintAffairs(string name, IList<Affair> affairs)
