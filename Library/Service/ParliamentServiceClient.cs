@@ -25,36 +25,31 @@ namespace Library.Service
         }
 
         /// <summary>
-        /// Returns the affairs for a given member name.
+        /// Returns the affairs for a given member id.
         /// </summary>
         /// <remarks>
-        /// Calls the <see cref="GetMemberIdAsync(string)"/> method to retrieve the member ID first,"/>
+        /// Calls the <see cref="GetMemberAsync(string)"/> method to retrieve the member ID first,"/>
         /// </remarks>
         /// <param name="memberName"></param>
         /// <returns></returns>
-        public async Task<List<Affair>?> GetMemberDataAsync(string memberName)
+        public async Task<List<Affair>?> GetMemberDataAsync(int memberId)
         {
-            var memberId = await GetMemberIdAsync(memberName);
-            if (memberId == null)
-            {
-                return null;
-            }
             // TODO: Imlement paging to retrieve all affairs if more than 300
-            var affairOverview = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{memberId}/affairs?limit=300");
+            var affairIDs = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{memberId}/affairs?limit=300");
             var affairs = new List<Affair>();
-            foreach (var affair in affairOverview?.Items ?? [])
+            foreach (var affair in affairIDs?.Items ?? [])
             {
-                var affairDetail = await _httpClient.GetFromJsonAsync<Affair>($"affairs/{affair.Id}?expand=texts");
+                var affairDetail = await _httpClient.GetFromJsonAsync<AffairDTO>($"affairs/{affair.Id}?expand=texts");
                 if (affairDetail != null)
                 {
-                    affairs.Add(affairDetail);
+                    affairs.Add(new(affairDetail));
                 }
             }
             return affairs;
         }
 
         /// <summary>
-        /// Returns the member ID for a given member name.
+        /// Returns the member for a given member name.
         /// </summary>
         /// <remarks>
         /// Uses search_mode=exact to get an exact match.
@@ -64,12 +59,12 @@ namespace Library.Service
         /// The name of the requested member
         /// </param>
         /// <returns>
-        /// Return the first matching member id or null if not found
+        /// Return the first matching member or null if not found
         /// </returns>
-        public async Task<int?> GetMemberIdAsync(string memberName)
+        public async Task<Member?> GetMemberAsync(string memberName)
         {
             var result = await _httpClient.GetFromJsonAsync<DataContainer<Member>>($"persons/?search={memberName}&search_mode=exact&active=true");
-            return result?.Items.FirstOrDefault()?.Id;
+            return result?.Items.FirstOrDefault() ?? null;
         }
 
 

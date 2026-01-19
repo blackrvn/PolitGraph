@@ -2,14 +2,13 @@
 
 namespace Library.Model
 {
-    public record class Text(
+
+    public record class TextDTO(
         int Id,
-        [property: JsonPropertyName("text")] Dictionary<string, string> Content
+        [property: JsonPropertyName("text")] Dictionary<string, string> Content,
+        [property: JsonPropertyName("type")] Dictionary<string, string> Type
         );
-    public record class Member(
-        int Id,
-        [property: JsonPropertyName("fullname")] string Name
-        );
+
     public record class ObjectId(int Id);
     /// <summary>
     /// Container Class to deserialize returned JSON.
@@ -19,6 +18,7 @@ namespace Library.Model
     ///     "data": [
     ///         {
     ///             "id": 210865
+    ///             ...
     ///         }
     ///     ]
     /// </code>
@@ -33,22 +33,9 @@ namespace Library.Model
     /// <param name="Id"></param>
     /// <param name="Titles"></param>
     /// <param name="Texts"></param>
-    public record class Affair(
+    public record class AffairDTO(
         int Id,
         [property: JsonPropertyName("title")] Dictionary<string, string> Titles,
-        [property: JsonPropertyName("texts")] DataContainer<Text>? Texts
-        )
-    {
-        public override string ToString()
-        {
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"Affair ID: {Id}");
-            if (Titles.TryGetValue("de", out var titleDe))
-            {
-                sb.AppendLine($"Title (DE): {titleDe}");
-            }
-            sb.AppendLine($"Number of Texts: {Texts?.Items.Count}");
-            return sb.ToString();
-        }
-    }
+        [property: JsonPropertyName("texts")] DataContainer<TextDTO>? Texts
+        );
 }

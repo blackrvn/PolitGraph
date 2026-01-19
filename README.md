@@ -15,6 +15,14 @@ In der ersten Phase wird die Anwendung stark reduziert und besteht nur aus folge
 - Diverse DTO's
 
 Hierbei wird bewusst auf eine graphische Darstellung, das Speichern sowie das Säubern verzichtet.
+
+#### Usage
+``` bash
+politgraph <name 1> <name 2>
+```
+```bash
+politgraph "Cyrill Aellen" "Pascal Broulis"
+```
 ### Phase 2
 In dieser Phase werden folgende Services ergänzt:
 - DBService (Zuständig für das Speichern und Bereitstellen der Ähnlichkeiten)

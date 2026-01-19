@@ -8,20 +8,27 @@ if (args.Length != 2)
     return;
 }
 var parliamentService = new ParliamentServiceClient();
-
+var members = new List<Member>();
 foreach (var name in args)
 {
-    var affairs = parliamentService.GetMemberDataAsync(name).Result;
-    if (affairs == null)
+    var member = parliamentService.GetMemberAsync(name).Result;
+    if (member != null)
     {
-        Console.WriteLine($"Member '{name}' not found.");
-        return;
+        members.Add(member);
+        var affairs = parliamentService.GetMemberDataAsync(member.Id).Result;
+        if (affairs == null)
+        {
+            Console.WriteLine($"Member '{name}' not found.");
+        }
+        else
+        {
+            member.Affairs = affairs;
+            PrintAffairs(name, affairs);
+        }
     }
-
-    PrintAffairs(name, affairs);
 }
 
-static void PrintAffairs(string name, IEnumerable<Affair> affairs)
+static void PrintAffairs(string name, IList<Affair> affairs)
 {
     Console.WriteLine($"---------- Affairs for {name} ----------");
     foreach (var affair in affairs)
@@ -29,5 +36,5 @@ static void PrintAffairs(string name, IEnumerable<Affair> affairs)
         Console.WriteLine(affair.ToString());
     }
     Console.WriteLine("----------\n");
-
 }
+
