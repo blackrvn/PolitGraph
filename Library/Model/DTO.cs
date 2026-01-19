@@ -5,8 +5,8 @@ namespace Library.Model
 
     public record class TextDTO(
         int Id,
-        [property: JsonPropertyName("text")] Dictionary<string, string> Content,
-        [property: JsonPropertyName("type")] Dictionary<string, string> Type
+        [property: JsonPropertyName("text_de")] string Content,
+        [property: JsonPropertyName("type_de")] string Type
         );
 
     public record class ObjectId(int Id);
@@ -31,11 +31,11 @@ namespace Library.Model
     /// Represents one affair
     /// </summary>
     /// <param name="Id"></param>
-    /// <param name="Titles"></param>
+    /// <param name="Title"></param>
     /// <param name="Texts"></param>
     public record class AffairDTO(
         int Id,
-        [property: JsonPropertyName("title")] Dictionary<string, string> Titles,
+        [property: JsonPropertyName("title_de")] string Title,
         [property: JsonPropertyName("texts")] DataContainer<TextDTO>? Texts
         );
 }

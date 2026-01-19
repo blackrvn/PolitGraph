@@ -10,16 +10,20 @@ namespace Library.Model
         public Affair(AffairDTO dto)
         {
             Id = dto.Id;
-            Title = dto.Titles.De();
+            Title = dto.Title;
             Text = FindSubmittedText(dto);
-
         }
 
         private string FindSubmittedText(AffairDTO dto)
         {
             var submitted = dto.Texts?.Items
-                 .FirstOrDefault(t => t.Type.De() == "Eingereichter TextDTO");
-            return submitted?.Content.De() ?? "NaN";
+                 .FirstOrDefault(t => t.Type == "Eingereichter Text");
+            return submitted?.Content ?? "NaN";
+        }
+
+        public override string ToString()
+        {
+            return $"{Title} - {Id}";
         }
     }
 }

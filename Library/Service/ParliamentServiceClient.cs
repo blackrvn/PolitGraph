@@ -39,7 +39,7 @@ namespace Library.Service
             var affairs = new List<Affair>();
             foreach (var affair in affairIDs?.Items ?? [])
             {
-                var affairDetail = await _httpClient.GetFromJsonAsync<AffairDTO>($"affairs/{affair.Id}?expand=texts");
+                var affairDetail = await _httpClient.GetFromJsonAsync<AffairDTO>($"affairs/{affair.Id}?expand=texts&lang=de&lang_format=flat");
                 if (affairDetail != null)
                 {
                     affairs.Add(new(affairDetail));
@@ -63,8 +63,16 @@ namespace Library.Service
         /// </returns>
         public async Task<Member?> GetMemberAsync(string memberName)
         {
-            var result = await _httpClient.GetFromJsonAsync<DataContainer<Member>>($"persons/?search={memberName}&search_mode=exact&active=true");
-            return result?.Items.FirstOrDefault() ?? null;
+            string[] names = memberName.Split(' ');
+            if(names.Length == 2)
+            {
+                var firstName = names[0];
+                var lastName = names[1];
+                var result = await _httpClient.GetFromJsonAsync<DataContainer<Member>>($"persons/?firstname={firstName}&lastname={lastName}&search_mode=exact&body_key=CHE");
+                return result?.Items.FirstOrDefault() ?? null;
+            }
+            return null;
+
         }
 
 
