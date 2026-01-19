@@ -1,6 +1,4 @@
-﻿using Library.Extentions;
-
-namespace Library.Model
+﻿namespace Library.Model
 {
     public class Affair
     {

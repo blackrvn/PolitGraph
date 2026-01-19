@@ -9,6 +9,7 @@ if (args.Length != 2)
 }
 var parliamentService = new ParliamentServiceClient();
 var members = new List<Member>();
+
 foreach (var name in args)
 {
     var member = parliamentService.GetMemberAsync(name).Result;
@@ -23,10 +24,19 @@ foreach (var name in args)
         else
         {
             member.Affairs = affairs;
-            PrintAffairs(name, affairs);
+            //PrintAffairs(name, affairs);
         }
     }
 }
+
+var store = new VectorStore(members);
+store.Transform();
+foreach (var member in members)
+{
+    var vectors = store.GetSparseVectors(member);
+    Console.WriteLine(vectors);
+}
+
 
 static void PrintAffairs(string name, IList<Affair> affairs)
 {
