@@ -4,9 +4,10 @@ using Library.Service;
 
 if (args.Length != 2)
 {
-    Console.WriteLine("Usage: politgraph <name one> <name two>");
+    Console.WriteLine("Usage: politgraph <first name last name> <first name last name>");
     return;
 }
+var cleaningService = new Dyson();
 var parliamentService = new ParliamentServiceClient();
 var members = new List<Member>();
 
@@ -29,12 +30,12 @@ foreach (var name in args)
     }
 }
 
-var store = new VectorStore(members);
+var store = new VectorStore(members, cleaningService);
 store.Transform();
 var vectors1 = store.GetSparseVectors(members[0]);
 var vectors2 = store.GetSparseVectors(members[1]);
-var mean1 = VectorCalculationService.SparseVectorMean(vectors1);
-var mean2 = VectorCalculationService.SparseVectorMean(vectors2);
+var mean1 = VectorCalculationService.Normalize(VectorCalculationService.SparseVectorMean(vectors1));
+var mean2 = VectorCalculationService.Normalize(VectorCalculationService.SparseVectorMean(vectors2));
 
 Console.WriteLine(VectorCalculationService.CosineSimilarity(mean1, mean2));
 

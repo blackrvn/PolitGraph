@@ -1,4 +1,5 @@
 ﻿using Library.Extension;
+using Library.Service;
 
 namespace Library.Model
 {
@@ -23,7 +24,7 @@ namespace Library.Model
         /// </summary>
         private readonly Dictionary<int, HashSet<string>> _documentWordBag = new();
         /// <summary>
-        /// The sparse vector for the given document.
+        /// The sparse kvp for the given document.
         /// <code>
         /// Key 1: AffairId
         /// Value 1: Dictionary<int, double>
@@ -51,7 +52,7 @@ namespace Library.Model
         /// </summary>
         /// <param name="members"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public VectorStore(IList<Member> members)
+        public VectorStore(IList<Member> members, Dyson cleaingService)
         {
             if (members == null || members.Count == 0)
             {
@@ -63,7 +64,8 @@ namespace Library.Model
                 for (int i = 0; i < member.Affairs.Count; i++)
                 {
                     var affair = member.Affairs[i];
-                    foreach (var word in affair.Text.Split(" ", StringSplitOptions.RemoveEmptyEntries))
+                    var words = cleaingService.Lemmatize(affair.Text);
+                    foreach (var word in words)
                     {
                         if (!_features.TryGetValue(word, out var map))
                         {
@@ -85,6 +87,7 @@ namespace Library.Model
             _words = _features.Keys.Order().ToList();
             _wordIndex = _words.Select((w, i) => (w, i)).ToDictionary(x => x.w, x => x.i);
 
+            cleaingService.Dispose();
         }
         /// <summary>
         /// Transforms the corpus into a matrix using TF-IDF.
@@ -121,8 +124,17 @@ namespace Library.Model
                     sparseVectors[_wordIndex[word]] = tf * idf;
                 }
             }
+            foreach (var kvp in _documentSparseVectors)
+            {
+                VectorCalculationService.Normalize(kvp.Value);
+            }
         }
 
+        /// <summary>
+        /// Return the sparse vectors associated with the affairs of the given member
+        /// </summary>
+        /// <param name="member"></param>
+        /// <returns></returns>
         public List<Dictionary<int, double>> GetSparseVectors(Member member)
         {
             var ids = member.Affairs.Select(a => a.Id).ToHashSet();

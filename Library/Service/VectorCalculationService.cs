@@ -2,14 +2,26 @@
 {
     public static class VectorCalculationService
     {
+        /// <summary>
+        /// Computes the cosine similarity of the given sparse vectors
+        /// </summary>
+        /// <param name="sparseVectorA"></param>
+        /// <param name="sparseVectorB"></param>
+        /// <returns></returns>
         public static double CosineSimilarity(Dictionary<int, double> sparseVectorA, Dictionary<int, double> sparseVectorB)
         {
             var dotProduct = DotProduct(sparseVectorA, sparseVectorB);
-            var lengthA = VectorLength(sparseVectorA);
-            var lengthB = VectorLength(sparseVectorB);
+            var lengthA = EuclideanNorm(sparseVectorA);
+            var lengthB = EuclideanNorm(sparseVectorB);
             return dotProduct / lengthA * lengthB;
         }
 
+        /// <summary>
+        /// Computes the dot-product of the given sparse vectors
+        /// </summary>
+        /// <param name="sparseVectorA"></param>
+        /// <param name="sparseVectorB"></param>
+        /// <returns></returns>
         private static double DotProduct(Dictionary<int, double> sparseVectorA, Dictionary<int, double> sparseVectorB)
         {
             double dotProduct = 0;
@@ -25,8 +37,18 @@
             }
             return dotProduct;
         }
-
-        private static double VectorLength(Dictionary<int, double> sparseVector)
+        /// <summary>
+        /// Calculates an euclidean norm factor of the given sparse vector
+        /// </summary>
+        /// <param name="sparseVector">
+        /// Sparse vector
+        /// <code>
+        /// Key: index
+        /// Value: weight
+        /// </code>
+        /// </param>
+        /// <returns></returns>
+        public static double EuclideanNorm(Dictionary<int, double> sparseVector)
         {
             double sum = 0;
             foreach (var kvp in sparseVector)
@@ -37,6 +59,27 @@
             return Math.Sqrt(sum);
         }
 
+        /// <summary>
+        /// Normalizes the given sparse vector<br/>
+        /// Uses <see cref="EuclideanNorm(Dictionary{int, double})"/>
+        /// </summary>
+        /// <param name="vector"></param>
+        /// <returns></returns>
+        public static Dictionary<int, double> Normalize(Dictionary<int, double> vector)
+        {
+            var norm = EuclideanNorm(vector);
+            foreach (var kvp in vector)
+            {
+                vector[kvp.Key] = kvp.Value / norm;
+            }
+            return vector;
+        }
+
+        /// <summary>
+        /// Computes a mean of the given sparse vectors<br/>
+        /// </summary>
+        /// <param name="sparseVectors"></param>
+        /// <returns></returns>
         public static Dictionary<int, double> SparseVectorMean(List<Dictionary<int, double>> sparseVectors)
         {
             // Build a set, containing every word index

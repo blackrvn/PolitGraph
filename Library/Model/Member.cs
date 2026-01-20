@@ -18,7 +18,7 @@ namespace Library.Model
             Id = id;
             FirstName = firstName;
             LastName = lastName;
-            Name = $"{FirstName} {LastName}"; // fullname property not always in the same form.
+            Name = $"{FirstName} {LastName}"; // fullname property nicht immer in der selben Form.
         }
     }
 }
