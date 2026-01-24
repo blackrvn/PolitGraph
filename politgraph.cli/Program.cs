@@ -1,43 +1,56 @@
 ﻿using Library.Model;
 using Library.Service;
+using politgraph.cli;
+
+var parliamentService = new ParliamentServiceClient();
+
+var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+var dir = Path.Combine(appData, "politgraph");
+var path = Path.Combine(dir, "members.json");
+
+if (!Directory.Exists(dir))
+{
+    Directory.CreateDirectory(dir);
+}
+
+var names = args.Where(arg => !arg.StartsWith("-")).ToArray();
+var options = args.Where(arg => arg.StartsWith("-")).ToArray();
+
+var storageService = new StoreageService(path);
+var updater = new Updater(storageService);
+
+var update = options.Contains("--Update") || args.Contains("-u");
 
 
-if (args.Length != 2)
+if (names.Length == 2)
+{
+    var comparer = new Comparer(storageService, parliamentService, updater, update);
+    var nameOne = names[0];
+    var nameTwo = names[1];
+    if (!comparer.Compare(nameOne, nameTwo))
+    {
+        Console.WriteLine("Could not compare the given members. Make sure the names are correct.");
+    }
+}
+
+else if (names.Length == 0 && update)
+{
+
+    if (updater.Update())
+    {
+        Console.WriteLine("Data updated successfully.");
+    }
+    else
+    {
+        Console.WriteLine("Could not update data.");
+    }
+}
+
+else
 {
     Console.WriteLine("Usage: politgraph <first name last name> <first name last name>");
     return;
 }
-var cleaningService = new Dyson();
-var parliamentService = new ParliamentServiceClient();
-var members = new List<Member>();
-
-foreach (var name in args)
-{
-    var member = parliamentService.GetMemberAsync(name).Result;
-    if (member != null)
-    {
-        members.Add(member);
-        var affairs = parliamentService.GetMemberDataAsync(member.Id).Result;
-        if (affairs == null)
-        {
-            Console.WriteLine($"Member '{name}' not found.");
-        }
-        else
-        {
-            member.Affairs = affairs;
-            //PrintAffairs(name, affairs);
-        }
-    }
-}
-
-var store = new VectorStore(members, cleaningService);
-store.Transform();
-var vectors1 = store.GetSparseVectors(members[0]);
-var vectors2 = store.GetSparseVectors(members[1]);
-var mean1 = VectorCalculationService.Normalize(VectorCalculationService.SparseVectorMean(vectors1));
-var mean2 = VectorCalculationService.Normalize(VectorCalculationService.SparseVectorMean(vectors2));
-
-Console.WriteLine(VectorCalculationService.CosineSimilarity(mean1, mean2));
 
 
 static void PrintAffairs(string name, IList<Affair> affairs)

@@ -24,20 +24,33 @@ namespace Library.Service
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
+        public async Task<Dictionary<int, Member>?> GetMembersAsync()
+        {
+            var members = new Dictionary<int, Member>();
+
+            var membersIds = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/?body_key=CHE");
+            foreach (var memberId in membersIds?.Items!)
+            {
+                var member = await GetMemberAsync(memberId.Id);
+                if (member != null)
+                {
+                    await AssignMemberDataAsync(member);
+                    members.Add(member.Id, member);
+                }
+            }
+            return members;
+        }
+
         /// <summary>
-        /// Returns the affairs for a given member id.
+        /// Assigns the affairs of a member to the given member object.
         /// </summary>
-        /// <remarks>
-        /// Calls the <see cref="GetMemberAsync(string)"/> method to retrieve the member ID first,"/>
-        /// </remarks>
-        /// <param name="memberName"></param>
-        /// <returns></returns>
-        public async Task<List<Affair>?> GetMemberDataAsync(int memberId)
+        /// <param name="member"></param>
+        public async Task AssignMemberDataAsync(Member member)
         {
             // TODO: Imlement paging to retrieve all affairs if more than 300
-            var affairIDs = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{memberId}/affairs?limit=300");
+            var affairIDs = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{member.Id}/affairs?limit=300");
             var affairs = new List<Affair>();
-            foreach (var affair in affairIDs?.Items ?? [])
+            foreach (var affair in affairIDs?.Items!)
             {
                 var affairDetail = await _httpClient.GetFromJsonAsync<AffairDTO>($"affairs/{affair.Id}?expand=texts&lang=de&lang_format=flat");
                 if (affairDetail != null)
@@ -45,15 +58,18 @@ namespace Library.Service
                     affairs.Add(new(affairDetail));
                 }
             }
-            return affairs;
+            member.Affairs = affairs;
+
         }
+
+
 
         /// <summary>
         /// Returns the member for a given member name.
         /// </summary>
         /// <remarks>
         /// Uses search_mode=exact to get an exact match.
-        /// Uses active=true to only search for active members.
+        /// Uses body_key=CHE to only search on a national level.
         /// </remarks>
         /// <param name="memberName">
         /// The name of the requested member
@@ -64,7 +80,7 @@ namespace Library.Service
         public async Task<Member?> GetMemberAsync(string memberName)
         {
             string[] names = memberName.Split(' ');
-            if(names.Length == 2)
+            if (names.Length == 2)
             {
                 var firstName = names[0];
                 var lastName = names[1];
@@ -73,6 +89,22 @@ namespace Library.Service
             }
             return null;
 
+        }
+
+        /// <summary>
+        /// Return the member for a given member id.
+        /// </summary>
+        /// <remarks>
+        /// Uses body_key=CHE to only search on a national level.
+        /// </remarks>
+        /// <param name="memberId"></param>
+        /// <returns>
+        /// Return the member or null if not found
+        /// </returns>
+        public async Task<Member?> GetMemberAsync(int memberId)
+        {
+            var result = await _httpClient.GetFromJsonAsync<DataContainer<Member>>($"persons/?{memberId}&body_key=CHE");
+            return result?.Items.FirstOrDefault() ?? null;
         }
 
 

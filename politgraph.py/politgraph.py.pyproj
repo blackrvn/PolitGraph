@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b0858409-976b-42e2-a228-bedd79e67fad</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>lemmatize_worker.py</StartupFile>
+    <StartupFile>text_worker.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,8 +22,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="lemmatize_worker.py" />
-    <Compile Include="nlp_worker.py" />
+    <Compile Include="text_worker.py" />
+    <Compile Include="main.py" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">

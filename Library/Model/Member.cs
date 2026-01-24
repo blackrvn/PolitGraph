@@ -10,6 +10,7 @@ namespace Library.Model
         [property: JsonPropertyName("lastname")]
         public string LastName { get; }
         public string Name { get; }
+        public Dictionary<int, double> Vector { get; set; }
 
         public List<Affair> Affairs { get; set; } = new();
 

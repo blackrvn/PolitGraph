@@ -1,15 +1,30 @@
-﻿namespace Library.Model
+﻿using System.Text.Json.Serialization;
+
+namespace Library.Model
 {
     public class Affair
     {
         public int Id { get; }
         public string Title { get; }
-        public string Text { get; }
+        public string TextRaw { get; }
+        public string[] Lemmas { get; }
+
+        public Dictionary<int, double> Vector { get; set; }
+
+        [JsonConstructor]
+        public Affair(int id, string title, string textRaw, string[] lemmas)
+        {
+            Id = id;
+            Title = title;
+            TextRaw = textRaw;
+            Lemmas = lemmas;
+        }
+
         public Affair(AffairDTO dto)
         {
             Id = dto.Id;
             Title = dto.Title;
-            Text = FindSubmittedText(dto);
+            TextRaw = FindSubmittedText(dto);
         }
 
         private string FindSubmittedText(AffairDTO dto)

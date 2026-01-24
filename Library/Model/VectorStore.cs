@@ -12,13 +12,18 @@ namespace Library.Model
     public class VectorStore : IVectorStore
     {
         /// <summary>
+        /// Set of members in the corpus
+        /// </summary>
+        private readonly HashSet<Member> _members = new();
+
+        /// <summary>
         /// Lookup map for the <see cref="_words"/> list.
         /// </summary>
-        private readonly Dictionary<string, int> _wordIndex;
+        private Dictionary<string, int> _wordIndex;
         /// <summary>
         /// Final list of words, ordered lexicographically
         /// </summary>
-        private readonly List<string> _words;
+        private List<string> _words;
         /// <summary>
         /// Set of words, that appear in a given document
         /// </summary>
@@ -46,25 +51,43 @@ namespace Library.Model
         /// </code>
         /// </summary>
         private readonly Dictionary<int, int> _documentTotalWordCounter = new();
+
+
+        public void Clear()
+        {
+            _members.Clear();
+            _features.Clear();
+            _documentTotalWordCounter.Clear();
+            _documentWordBag.Clear();
+            _documentSparseVectors.Clear();
+            _wordIndex = new();
+            _words = new();
+        }
+
         /// <summary>
-        /// Creates a new VectorStore object for the given members.
-        /// Alredy processes the texts and counts word frequencies.
+        /// Adds multiple members to the corpus
         /// </summary>
         /// <param name="members"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public VectorStore(IList<Member> members, Dyson cleaingService)
+        public void AddToCorpus(ICollection<Member> members)
         {
-            if (members == null || members.Count == 0)
-            {
-                throw new ArgumentNullException(nameof(members));
-            }
-
             foreach (var member in members)
+            {
+                _members.Add(member);
+            }
+        }
+
+        /// <summary>
+        /// Builds the corpus from the added members
+        /// </summary>
+        public void BuildCorpus()
+        {
+            foreach (var member in _members)
             {
                 for (int i = 0; i < member.Affairs.Count; i++)
                 {
                     var affair = member.Affairs[i];
-                    var words = cleaingService.Lemmatize(affair.Text);
+                    var words = affair.Lemmas;
+
                     foreach (var word in words)
                     {
                         if (!_features.TryGetValue(word, out var map))
@@ -86,9 +109,8 @@ namespace Library.Model
             }
             _words = _features.Keys.Order().ToList();
             _wordIndex = _words.Select((w, i) => (w, i)).ToDictionary(x => x.w, x => x.i);
-
-            cleaingService.Dispose();
         }
+
         /// <summary>
         /// Transforms the corpus into a matrix using TF-IDF.
         /// Uses the corpus thas has been prebuilt in <see cref="VectorStore(IList{Member})"/>
@@ -131,6 +153,17 @@ namespace Library.Model
         }
 
         /// <summary>
+        /// Assigns the calculated vectors to the members in the corpus
+        /// </summary>
+        public void AssignVectorsToMembers()
+        {
+            foreach (var member in _members)
+            {
+                member.Vector = GetVectorForMember(member);
+            }
+        }
+
+        /// <summary>
         /// Return the sparse vectors associated with the affairs of the given member
         /// </summary>
         /// <param name="member"></param>
@@ -140,6 +173,18 @@ namespace Library.Model
             var ids = member.Affairs.Select(a => a.Id).ToHashSet();
             return _documentSparseVectors.Where(kvp => ids.Contains(kvp.Key)).Select(kvp => kvp.Value).ToList();
 
+        }
+
+        /// <summary>
+        /// Calculates the mean normalized vector for the given member
+        /// </summary>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        public Dictionary<int, double> GetVectorForMember(Member member)
+        {
+            var vectors = GetSparseVectors(member);
+            var meanVector = VectorCalculationService.SparseVectorMean(vectors);
+            return VectorCalculationService.Normalize(meanVector);
         }
     }
 

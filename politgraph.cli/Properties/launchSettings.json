@@ -2,7 +2,7 @@
   "profiles": {
     "politgraph.cli": {
       "commandName": "Project",
-      "commandLineArgs": "\"Cyril Aellen\" \"Pascal Broulis\""
+      "commandLineArgs": "-u \"Tamara Funiciello\" \"Erich Hess\""
     }
   }
 }
