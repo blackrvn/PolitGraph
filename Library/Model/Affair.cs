@@ -9,7 +9,7 @@ namespace Library.Model
         public string TextRaw { get; }
         public string[] Lemmas { get; }
 
-        public Dictionary<int, double> Vector { get; set; }
+        public Dictionary<int, double> Vector { get; set; } = new();
 
         [JsonConstructor]
         public Affair(int id, string title, string textRaw, string[] lemmas)

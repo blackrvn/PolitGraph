@@ -1,5 +1,4 @@
-﻿using Library.Model;
-using Library.Service;
+﻿using Library.Service;
 using politgraph.cli;
 
 var parliamentService = new ParliamentServiceClient();
@@ -50,16 +49,5 @@ else
 {
     Console.WriteLine("Usage: politgraph <first name last name> <first name last name>");
     return;
-}
-
-
-static void PrintAffairs(string name, IList<Affair> affairs)
-{
-    Console.WriteLine($"---------- Affairs for {name} ----------");
-    foreach (var affair in affairs)
-    {
-        Console.WriteLine(affair.ToString());
-    }
-    Console.WriteLine("----------\n");
 }
 

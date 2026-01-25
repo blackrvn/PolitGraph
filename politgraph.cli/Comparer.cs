@@ -28,32 +28,33 @@ namespace politgraph.cli
         public bool Compare(string nameOne, string nameTwo)
         {
 
-            if (!TryGetData(nameOne, out var memberOne))
+            if (!TryGetData(nameOne, out var memberOne, out var wasUpdated))
             {
                 return false;
             }
-            if (!TryGetData(nameTwo, out var memberTwo))
+            if (!TryGetData(nameTwo, out var memberTwo, out wasUpdated))
             {
                 return false;
             }
 
-            _updater.UpdateVectors();
-
-            // Neu laden, da die Instanzen in StorageService aktualisiert wurden
-            if (_storageService.TryGetMember(memberOne.Id, out memberOne) &&
-               _storageService.TryGetMember(memberTwo.Id, out memberTwo))
+            // Vektoren aktualisieren, falls Daten aktualisiert wurden
+            if (wasUpdated)
             {
+                _updater.UpdateVectors();
+
+                // Neu laden, da die Instanzen in StorageService aktualisiert wurden
+                if (!_storageService.TryGetMember(memberOne.Id, out memberOne) ||
+                   !_storageService.TryGetMember(memberTwo.Id, out memberTwo))
+                {
+                    Console.WriteLine("Could not update vectors after data update.");
+                    return false;
+                }
                 Console.WriteLine("Vectors updated successfully.");
-                var sim = VectorCalculationService.CosineSimilarity(memberOne.Vector, memberTwo.Vector);
-                Console.WriteLine($"Cosine-Similarity between '{memberOne.Name}' and '{memberTwo.Name}': {sim}");
-                return true;
-            }
-            else
-            {
-                Console.WriteLine("Could not update vectors.");
-                return false;
             }
 
+            var sim = VectorCalculationService.CosineSimilarity(memberOne.Vector, memberTwo.Vector);
+            Console.WriteLine($"Cosine-Similarity between '{memberOne.Name}' and '{memberTwo.Name}': {sim}");
+            return true;
         }
 
         /// <summary>
@@ -64,22 +65,26 @@ namespace politgraph.cli
         /// The retrieved member. May be an legacy instance -> needs to be reloaded from storage after update.
         /// </param>
         /// <returns></returns>
-        private bool TryGetData(string memberName, out Member member)
+        private bool TryGetData(string memberName, out Member member, out bool wasUpdated)
         {
             member = _parliamentService.GetMemberAsync(memberName).Result;
+            wasUpdated = false;
             if (member != null)
             {
-                if (_storageService.TryGetMember(member.Id, out var storedMember))
+                // Überprüfen, ob das Mitglied in der Speicherung vorhanden ist und ob die Daten aktuell sind
+                if (_storageService.TryGetMember(member.Id, out var storedMember) && storedMember.UpdatedAt == member.UpdatedAt)
                 {
                     member = storedMember!;
                     return true;
                 }
+                // Daten sind veraltet oder Mitglied nicht in Speicherung
                 else
                 {
                     if (_update)
                     {
                         if (_updater.Update(member))
                         {
+                            wasUpdated = true;
                             return true;
                         }
                         else

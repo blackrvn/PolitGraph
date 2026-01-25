@@ -6,6 +6,9 @@ namespace politgraph.cli
 {
     internal class Updater
     {
+        /// <summary>
+        /// Path to the main executable
+        /// </summary>
         private readonly string PATH;
 
         private readonly StoreageService _storageService;
@@ -21,6 +24,10 @@ namespace politgraph.cli
             PATH = Path.Combine(AppContext.BaseDirectory, "main.exe");
         }
 
+        /// <summary>
+        /// Clears and rebuilds the vector store for all members in storage.
+        /// </summary>
+        /// <returns></returns>
         public bool UpdateVectors()
         {
             _vectorStore.Clear();
@@ -32,34 +39,83 @@ namespace politgraph.cli
             return true;
         }
 
+        /// <summary>
+        /// Updates data for a specific member.
+        /// </summary>
+        /// <param name="member"></param>
+        /// <returns></returns>
         public bool Update(Member member)
         {
             _client.AssignMemberDataAsync(member).Wait();
             _storageService.AddOrUpdateMember(member);
             _storageService.Save();
-            using (Process process = Process.Start(PATH))
-            {
-                process.WaitForExit();
-            }
+            StartProcess(member.Id);
             _storageService.LoadData();
             return true;
         }
 
+        /// <summary>
+        /// Updates data for all members.
+        /// </summary>
+        /// <returns></returns>
         public bool Update()
         {
             var members = _client.GetMembersAsync().Result;
             if (members != null)
             {
                 _storageService.Save();
-                using (Process process = Process.Start(PATH))
-                {
-                    process.WaitForExit();
-                }
+                StartProcess();
                 _storageService.LoadData();
                 return true;
             }
             return false;
         }
 
+        /// <summary>
+        /// Starts the process to update lemmas.
+        /// Process uses spacy to update the lemmas of the stored members
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <returns></returns>
+        private bool StartProcess(int? memberId = null)
+        {
+            if (memberId == null)
+            {
+                try
+                {
+                    using (Process process = Process.Start(PATH))
+                    {
+                        process.WaitForExit();
+                    }
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return false;
+                }
+
+            }
+            else
+            {
+                var startInfo = new ProcessStartInfo();
+                startInfo.UseShellExecute = false;
+                startInfo.FileName = PATH;
+                startInfo.Arguments = memberId.ToString();
+                try
+                {
+                    using (var process = Process.Start(startInfo))
+                    {
+                        process.WaitForExit();
+                    }
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
     }
 }

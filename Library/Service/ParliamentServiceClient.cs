@@ -24,6 +24,13 @@ namespace Library.Service
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
+        /// <summary>
+        /// Gets all members from the parliament API. <br/>
+        /// </summary>
+        /// <returns>
+        /// Returns a dictionary of all members with their IDs as keys or null if no members found. <br/>
+        /// Return only members on national level (body_key=CHE).
+        /// </returns>
         public async Task<Dictionary<int, Member>?> GetMembersAsync()
         {
             var members = new Dictionary<int, Member>();
