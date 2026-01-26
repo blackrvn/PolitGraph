@@ -46,12 +46,16 @@ namespace politgraph.cli
         /// <returns></returns>
         public bool Update(Member member)
         {
-            _client.AssignMemberDataAsync(member).Wait();
-            _storageService.AddOrUpdateMember(member);
-            _storageService.Save();
-            StartProcess(member.Id);
-            _storageService.LoadData();
-            return true;
+
+            if (_client.TryAssignMemberDataAsync(member).Result)
+            {
+                _storageService.AddOrUpdateMember(member);
+                _storageService.Save();
+                StartProcess(member.Id);
+                _storageService.LoadData();
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -63,7 +67,7 @@ namespace politgraph.cli
             var members = _client.GetMembersAsync().Result;
             if (members != null)
             {
-                _storageService.Save();
+                _storageService.Save(members);
                 StartProcess();
                 _storageService.LoadData();
                 return true;

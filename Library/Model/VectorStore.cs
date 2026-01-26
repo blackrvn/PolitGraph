@@ -160,6 +160,13 @@ namespace Library.Model
             foreach (var member in _members)
             {
                 member.Vector = GetVectorForMember(member);
+                foreach (var affair in member.Affairs)
+                {
+                    if (_documentSparseVectors.TryGetValue(affair.Id, out var vector))
+                    {
+                        affair.Vector = vector;
+                    }
+                }
             }
         }
 

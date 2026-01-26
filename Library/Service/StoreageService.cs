@@ -19,8 +19,12 @@ namespace Library.Service
         /// <summary>
         /// Saves the current members to the storage file.
         /// </summary>
-        public void Save()
+        public void Save(Dictionary<int, Member> members = null)
         {
+            if (members != null)
+            {
+                Members = members;
+            }
             var json = JsonSerializer.Serialize(Members, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_filePath, json);
         }

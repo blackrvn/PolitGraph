@@ -1,4 +1,5 @@
 ﻿using Library.Model;
+using ShellProgressBar;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
@@ -36,13 +37,32 @@ namespace Library.Service
             var members = new Dictionary<int, Member>();
 
             var membersIds = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/?body_key=CHE");
-            foreach (var memberId in membersIds?.Items!)
+
+            var pgBarOptions = new ProgressBarOptions
             {
-                var member = await GetMemberAsync(memberId.Id);
-                if (member != null)
+                ProgressCharacter = '─',
+                ProgressBarOnBottom = true
+            };
+            using (var pbar = new ProgressBar(membersIds?.Items.Count() ?? 0, "Retrieving members...", pgBarOptions))
+            {
+                foreach (var memberId in membersIds?.Items!)
                 {
-                    await AssignMemberDataAsync(member);
-                    members.Add(member.Id, member);
+                    try
+                    {
+                        var member = await GetMemberAsync(memberId.Id);
+                        if (member != null)
+                        {
+                            if (TryAssignMemberDataAsync(member).Result)
+                            {
+                                members[memberId.Id] = member;
+                            }
+                        }
+                        pbar.Tick();
+                    }
+                    catch 
+                    {
+                        Console.WriteLine($"[{memberId}] Could not get member");
+                    }
                 }
             }
             return members;
@@ -52,20 +72,40 @@ namespace Library.Service
         /// Assigns the affairs of a member to the given member object.
         /// </summary>
         /// <param name="member"></param>
-        public async Task AssignMemberDataAsync(Member member)
+        public async Task<bool> TryAssignMemberDataAsync(Member member)
         {
-            // TODO: Imlement paging to retrieve all affairs if more than 300
-            var affairIDs = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{member.Id}/affairs?limit=300");
-            var affairs = new List<Affair>();
-            foreach (var affair in affairIDs?.Items!)
+            var success = false;
+            try
             {
-                var affairDetail = await _httpClient.GetFromJsonAsync<AffairDTO>($"affairs/{affair.Id}?expand=texts&lang=de&lang_format=flat");
-                if (affairDetail != null)
+                // TODO: Imlement paging to retrieve all affairs if more than 300
+                var affairIDs = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{member.Id}/affairs?limit=300");
+                var affairs = new List<Affair>();
+                foreach (var affair in affairIDs?.Items!)
                 {
-                    affairs.Add(new(affairDetail));
+                    try
+                    {
+                        var affairDetail = await _httpClient.GetFromJsonAsync<AffairDTO>($"affairs/{affair.Id}?expand=texts&lang=de&lang_format=flat");
+                        if (affairDetail != null)
+                        {
+                            affairs.Add(new(affairDetail));
+                        }
+                    }
+                    catch (AggregateException e)
+                    {
+                        Console.WriteLine($"[{member.Id}][{affair}] Could not assign data");
+                        Console.WriteLine(e.InnerException);
+                    }
                 }
+                member.Affairs = affairs;
+                success = member.Affairs.Any();
+                return success;
             }
-            member.Affairs = affairs;
+            catch (AggregateException e)
+            {
+                Console.WriteLine($"[{member.Id}] Could not assign data");
+                Console.WriteLine(e.InnerException);
+                return success;
+            }
 
         }
 
@@ -101,17 +141,14 @@ namespace Library.Service
         /// <summary>
         /// Return the member for a given member id.
         /// </summary>
-        /// <remarks>
-        /// Uses body_key=CHE to only search on a national level.
-        /// </remarks>
         /// <param name="memberId"></param>
         /// <returns>
         /// Return the member or null if not found
         /// </returns>
         public async Task<Member?> GetMemberAsync(int memberId)
         {
-            var result = await _httpClient.GetFromJsonAsync<DataContainer<Member>>($"persons/?{memberId}&body_key=CHE");
-            return result?.Items.FirstOrDefault() ?? null;
+            var result = await _httpClient.GetFromJsonAsync<Member>($"persons/{memberId}");
+            return result ?? null;
         }
 
 

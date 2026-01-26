@@ -37,6 +37,7 @@ else if (names.Length == 0 && update)
 
     if (updater.Update())
     {
+        updater.UpdateVectors();
         Console.WriteLine("Data updated successfully.");
     }
     else
