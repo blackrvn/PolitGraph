@@ -31,7 +31,7 @@ namespace Library.Model
         {
             var submitted = dto.Texts?.Items
                  .FirstOrDefault(t => t.Type == "Eingereichter Text");
-            return submitted?.Content ?? "NaN";
+            return submitted?.Content ?? Title;
         }
 
         public override string ToString()

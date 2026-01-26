@@ -25,7 +25,11 @@ namespace Library.Model
     /// </summary>
     /// <typeparam name="Type"></typeparam>
     /// <param name="Items"></param>
-    public record class DataContainer<Type>([property: JsonPropertyName("data")] List<Type> Items);
+    public record class DataContainer<Type>(
+        [property: JsonPropertyName("data")] List<Type> Items,
+        [property: JsonPropertyName("meta")] MetaData? Meta
+        )
+        ;
 
     /// <summary>
     /// Represents one affair
@@ -37,5 +41,9 @@ namespace Library.Model
         int Id,
         [property: JsonPropertyName("title_de")] string Title,
         [property: JsonPropertyName("texts")] DataContainer<TextDTO>? Texts
+        );
+
+    public record class MetaData(
+        [property: JsonPropertyName("total_records")] int Total
         );
 }

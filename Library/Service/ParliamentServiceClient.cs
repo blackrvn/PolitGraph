@@ -23,6 +23,7 @@ namespace Library.Service
             _httpClient.BaseAddress = new Uri(Constants.API);
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            _httpClient.Timeout = TimeSpan.FromSeconds(10);
         }
 
         /// <summary>
@@ -45,24 +46,32 @@ namespace Library.Service
             };
             using (var pbar = new ProgressBar(membersIds?.Items.Count() ?? 0, "Retrieving members...", pgBarOptions))
             {
-                foreach (var memberId in membersIds?.Items!)
+                for (int i = 0; i < membersIds?.Items.Count; i++)
                 {
+                    var memberId = membersIds.Items[i];
                     try
                     {
                         var member = await GetMemberAsync(memberId.Id);
                         if (member != null)
                         {
-                            if (TryAssignMemberDataAsync(member).Result)
+                            if (await TryAssignMemberDataAsync(member))
                             {
                                 members[memberId.Id] = member;
                             }
                         }
-                        pbar.Tick();
                     }
-                    catch 
+                    catch (HttpRequestException e)
                     {
                         Console.WriteLine($"[{memberId}] Could not get member");
+                        Console.WriteLine(e.Message);
                     }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+
+                    pbar.Tick();
+
                 }
             }
             return members;
@@ -78,32 +87,54 @@ namespace Library.Service
             try
             {
                 // TODO: Imlement paging to retrieve all affairs if more than 300
+                // Gibt Fehler 500, wenn die Person keine Geschäfte hat
                 var affairIDs = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{member.Id}/affairs?limit=300");
                 var affairs = new List<Affair>();
-                foreach (var affair in affairIDs?.Items!)
+
+                var pgBarOptions = new ProgressBarOptions
                 {
-                    try
+                    ProgressCharacter = '─',
+                    ProgressBarOnBottom = true
+                };
+
+                using (var pbar = new ProgressBar(affairIDs?.Items.Count ?? 0, $"Assigning data for {member}", pgBarOptions))
+                {
+                    foreach (var affair in affairIDs?.Items!)
                     {
-                        var affairDetail = await _httpClient.GetFromJsonAsync<AffairDTO>($"affairs/{affair.Id}?expand=texts&lang=de&lang_format=flat");
-                        if (affairDetail != null)
+                        try
                         {
-                            affairs.Add(new(affairDetail));
+                            var affairDetail = await _httpClient.GetFromJsonAsync<AffairDTO>($"affairs/{affair.Id}?expand=texts&lang=de&lang_format=flat");
+                            if (affairDetail != null)
+                            {
+                                affairs.Add(new(affairDetail));
+                            }
                         }
-                    }
-                    catch (AggregateException e)
-                    {
-                        Console.WriteLine($"[{member.Id}][{affair}] Could not assign data");
-                        Console.WriteLine(e.InnerException);
+                        catch (HttpRequestException e)
+                        {
+                            Console.WriteLine($"[{member.Id}][{affair}] Could not assign data");
+                            Console.WriteLine(e.InnerException);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex);
+                        }
+                        pbar.Tick();
                     }
                 }
+
                 member.Affairs = affairs;
                 success = member.Affairs.Any();
                 return success;
             }
-            catch (AggregateException e)
+            catch (HttpRequestException e)
             {
                 Console.WriteLine($"[{member.Id}] Could not assign data");
                 Console.WriteLine(e.InnerException);
+                return success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
                 return success;
             }
 

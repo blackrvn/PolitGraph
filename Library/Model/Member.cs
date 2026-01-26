@@ -28,6 +28,11 @@ namespace Library.Model
             UpdatedAt = updatedAt;
             Name = $"{FirstName} {LastName}";
         }
+
+        public override string ToString()
+        {
+            return $"{Name} - {Id}";
+        }
     }
 
 }
