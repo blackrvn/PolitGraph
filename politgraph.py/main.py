@@ -39,7 +39,8 @@ with open(path, "r", encoding="utf-8") as f:
 def update_member(mid: int, member_obj: dict):
     affairs = member_obj.get("Affairs", [])
     for affair in tqdm(affairs, desc=f"Cleaning texts for member {mid} - {member_obj["Name"]}", leave=False):
-        cleanText = text_worker.clean(affair.get("TextRaw", ""))
+        text_raw = affair.get("TextRaw")
+        cleanText = text_worker.clean(text_raw)
         lemmas = text_worker.lemmatize(cleanText, nlp)
         affair["Lemmas"] = lemmas
 

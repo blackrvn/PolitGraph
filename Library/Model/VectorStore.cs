@@ -88,22 +88,25 @@ namespace Library.Model
                     var affair = member.Affairs[i];
                     var words = affair.Lemmas;
 
-                    foreach (var word in words)
+                    if (words != null)
                     {
-                        if (!_features.TryGetValue(word, out var map))
+                        foreach (var word in words)
                         {
-                            map = new();
-                            _features[word] = map;
-                        }
+                            if (!_features.TryGetValue(word, out var map))
+                            {
+                                map = new();
+                                _features[word] = map;
+                            }
 
-                        map.Increment(affair.Id);
-                        _documentTotalWordCounter.Increment(affair.Id);
-                        if (!_documentWordBag.TryGetValue(affair.Id, out var bag))
-                        {
-                            bag = new();
-                            _documentWordBag[affair.Id] = bag;
+                            map.Increment(affair.Id);
+                            _documentTotalWordCounter.Increment(affair.Id);
+                            if (!_documentWordBag.TryGetValue(affair.Id, out var bag))
+                            {
+                                bag = new();
+                                _documentWordBag[affair.Id] = bag;
+                            }
+                            bag.Add(word);
                         }
-                        bag.Add(word);
                     }
                 }
             }

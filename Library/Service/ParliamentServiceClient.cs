@@ -35,45 +35,60 @@ namespace Library.Service
         /// </returns>
         public async Task<Dictionary<int, Member>?> GetMembersAsync()
         {
+            var semaphore = new SemaphoreSlim(10);
             var members = new Dictionary<int, Member>();
 
-            var membersIds = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/?body_key=CHE");
+            var ids = await GetPaginatedResultAsync($"persons/?body_key=CHE&active=true");
 
             var pgBarOptions = new ProgressBarOptions
             {
                 ProgressCharacter = '─',
                 ProgressBarOnBottom = true
             };
-            using (var pbar = new ProgressBar(membersIds?.Items.Count() ?? 0, "Retrieving members...", pgBarOptions))
+
+            int done = 0;
+            int max = ids.Count;
+            var msg = $"[{done} / {max}] Processing members...";
+            using var pbar = new ProgressBar(max, msg, pgBarOptions);
+
+            var tasks = ids.Select(async id =>
             {
-                for (int i = 0; i < membersIds?.Items.Count; i++)
+                int count;
+                // Warten darauf, dass diese Task an der Reihe ist
+                await semaphore.WaitAsync();
+                try
                 {
-                    var memberId = membersIds.Items[i];
-                    try
+                    var member = await GetMemberAsync(id);
+                    if (member != null)
                     {
-                        var member = await GetMemberAsync(memberId.Id);
-                        if (member != null)
-                        {
-                            if (await TryAssignMemberDataAsync(member))
-                            {
-                                members[memberId.Id] = member;
-                            }
-                        }
+                        return await TryAssignMemberDataAsync(member) ? member : null;
                     }
-                    catch (HttpRequestException e)
-                    {
-                        Console.WriteLine($"[{memberId}] Could not get member");
-                        Console.WriteLine(e.Message);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
-
-                    pbar.Tick();
-
+                    return null;
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"[{id}] failed: {e.Message}");
+                    return null;
+                }
+                finally
+                {
+                    // Freigeben
+                    count = semaphore.Release();
+                    var current = Interlocked.Increment(ref done);
+                    pbar.Tick($"[{current} / {max}] Processing members...");
+                }
+            });
+
+            var results = await Task.WhenAll(tasks);
+
+            Console.WriteLine($"Member with affairs: {results.Count(m => m != null)}");
+            Console.WriteLine($"Member without affairs: {results.Count(m => m == null)}");
+
+            foreach (var member in results.Where(x => x != null))
+            {
+                members[member!.Id] = member;
             }
+
             return members;
         }
 
@@ -86,9 +101,8 @@ namespace Library.Service
             var success = false;
             try
             {
-                // TODO: Imlement paging to retrieve all affairs if more than 300
                 // Gibt Fehler 500, wenn die Person keine Geschäfte hat
-                var affairIDs = await _httpClient.GetFromJsonAsync<DataContainer<ObjectId>>($"persons/{member.Id}/affairs?limit=300");
+                var ids = await GetPaginatedResultAsync($"persons/{member.Id}/affairs?limit=300");
                 var affairs = new List<Affair>();
 
                 var pgBarOptions = new ProgressBarOptions
@@ -97,28 +111,49 @@ namespace Library.Service
                     ProgressBarOnBottom = true
                 };
 
-                using (var pbar = new ProgressBar(affairIDs?.Items.Count ?? 0, $"Assigning data for {member}", pgBarOptions))
+                int done = 0;
+                int max = ids.Count;
+                var msg = $"[{done} / {max}] Processing members...";
+
+                //using var pbar = new ProgressBar(max, msg, pgBarOptions);
+
+                foreach (var affairId in ids)
                 {
-                    foreach (var affair in affairIDs?.Items!)
+                    try
                     {
-                        try
+                        var affairResponse = await _httpClient.GetAsync($"affairs/{affairId}?expand=texts&lang=de&lang_format=flat");
+                        if (!affairResponse.IsSuccessStatusCode)
                         {
-                            var affairDetail = await _httpClient.GetFromJsonAsync<AffairDTO>($"affairs/{affair.Id}?expand=texts&lang=de&lang_format=flat");
-                            if (affairDetail != null)
+                            Console.WriteLine($"[{member.Id}][{affairId}] Could not assign data: {(int)affairResponse.StatusCode}");
+                        }
+                        else
+                        {
+                            var affairDto = await affairResponse.Content.ReadFromJsonAsync<AffairDTO>();
+                            if (affairDto != null)
                             {
-                                affairs.Add(new(affairDetail));
+                                var affair = new Affair(affairDto);
+                                if (affair.TextRaw != null)
+                                {
+                                    // Nur Geschäfte, die einen deutschen Text beinhalten hinzufügen.
+                                    affairs.Add(affair);
+                                }
                             }
+
                         }
-                        catch (HttpRequestException e)
-                        {
-                            Console.WriteLine($"[{member.Id}][{affair}] Could not assign data");
-                            Console.WriteLine(e.InnerException);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex);
-                        }
-                        pbar.Tick();
+                    }
+                    catch (HttpRequestException e)
+                    {
+                        Console.WriteLine($"[{member.Id}][{affairId}] Could not assign data");
+                        Console.WriteLine(e.InnerException);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                    }
+                    finally
+                    {
+                        var current = Interlocked.Increment(ref done);
+                        //pbar.Tick($"[{current} / {max}] Processing members...");
                     }
                 }
 
@@ -182,6 +217,50 @@ namespace Library.Service
             return result ?? null;
         }
 
+        private async Task<HashSet<int>> GetPaginatedResultAsync(string entryNode)
+        {
+            var resp = await _httpClient.GetAsync(entryNode);
+            var ids = new HashSet<int>();
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"[{entryNode}] Failed: {(int)resp.StatusCode}");
+            }
+            else
+            {
+                var container = await resp.Content.ReadFromJsonAsync<DataContainer<ObjectId>>();
+                var metaData = container?.Meta;
+
+                while (true)
+                {
+                    foreach (var id in container?.Items.Select(x => x.Id)!)
+                    {
+                        ids.Add(id);
+                    }
+                    if (metaData?.NextPage != null)
+                    {
+                        resp = await _httpClient.GetAsync(metaData.NextPage);
+                        if (resp.IsSuccessStatusCode)
+                        {
+                            container = await resp.Content.ReadFromJsonAsync<DataContainer<ObjectId>>();
+                            metaData = container?.Meta;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+            }
+            return ids;
+
+
+        }
 
     }
 }

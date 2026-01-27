@@ -44,6 +44,8 @@ namespace Library.Model
         );
 
     public record class MetaData(
-        [property: JsonPropertyName("total_records")] int Total
+        [property: JsonPropertyName("total_records")] int Total,
+        [property: JsonPropertyName("has_more")] bool HasMore,
+        [property: JsonPropertyName("next_page")] string NextPage
         );
 }
