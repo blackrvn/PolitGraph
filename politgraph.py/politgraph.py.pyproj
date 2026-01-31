@@ -22,8 +22,45 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="update\app.py" />
+    <Compile Include="update\cli.py" />
+    <Compile Include="update\common\types.py" />
+    <Compile Include="update\common\util.py" />
+    <Compile Include="update\common\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="update\embed\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="update\extract\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="update\graph\builder.py" />
+    <Compile Include="update\graph\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="update\extract\dtos.py" />
+    <Compile Include="update\embed\embedder.py" />
+    <Compile Include="update\api\http_client.py" />
+    <Compile Include="update\api\parliament_api.py" />
+    <Compile Include="update\api\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="update\pipeline\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="update\storage\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="update\storage\sqlite_storage.py" />
+    <Compile Include="update\extract\text_extractors.py" />
     <Compile Include="text_worker.py" />
     <Compile Include="main.py" />
+    <Compile Include="update\pipeline\updater.py" />
+    <Compile Include="update\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="update\__main__.py" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
@@ -38,6 +75,16 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="readme.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="update\common\" />
+    <Folder Include="update\embed\" />
+    <Folder Include="update\extract\" />
+    <Folder Include="update\graph\" />
+    <Folder Include="update\api\" />
+    <Folder Include="update\pipeline\" />
+    <Folder Include="update\storage\" />
+    <Folder Include="update\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
