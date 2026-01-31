@@ -10,6 +10,12 @@ def build_parser() -> argparse.ArgumentParser:
         description="Parliament update pipeline",
     )
     p.add_argument(
+        "--offset",
+        type=int,
+        default=0,
+        help="Use to debug, skips the first n members"
+        )
+    p.add_argument(
         "--active",
         type=bool,
         default=True,
