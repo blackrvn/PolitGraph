@@ -52,7 +52,7 @@ class ParliamentApi:
 
     async def list_active_member_ids(self) -> Set[int]:
         return await self._get_paginated_ids(
-            "persons/?body_key=CHE&active=true&offset=245"
+            "persons/?body_key=CHE&active=true"
         )
 
     async def get_member(self, member_id: int) -> Optional[Dict[str, Any]]:
