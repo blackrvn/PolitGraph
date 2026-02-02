@@ -29,7 +29,6 @@
   <ItemGroup>
     <Compile Include="update\app.py" />
     <Compile Include="update\cli.py" />
-    <Compile Include="update\common\types.py" />
     <Compile Include="update\common\util.py" />
     <Compile Include="update\common\__init__.py">
       <SubType>Code</SubType>
@@ -60,8 +59,6 @@
     </Compile>
     <Compile Include="update\storage\sqlite_storage.py" />
     <Compile Include="update\extract\text_extractors.py" />
-    <Compile Include="text_worker.py" />
-    <Compile Include="main.py" />
     <Compile Include="update\pipeline\updater.py" />
     <Compile Include="update\__init__.py">
       <SubType>Code</SubType>
