@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "politgraph.cli": {
-      "commandName": "Project",
-      "commandLineArgs": "-u"
-    }
-  }
-}
