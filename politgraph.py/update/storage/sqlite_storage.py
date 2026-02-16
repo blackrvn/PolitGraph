@@ -9,6 +9,8 @@ from tqdm.auto import tqdm
 from update.extract.dtos import AffairDTO, EdgeDTO, MemberDTO
 from update.common import util
 
+sqlite3.register_adapter(np.float32, float)
+
 class SQLStorage:
     def __init__(self, *, connection_string: str, concurrency: int = 10):
         self._connection_string = connection_string
@@ -186,6 +188,8 @@ class SQLStorage:
                     await self.add_member(member=member, vector_id=v_id)
                 elif not await self.is_member_updated(member=member):
                     await self.update_member(member=member)
+            except (sqlite3.IntegrityError):
+                print(f"[{member.id}] could not save member")
             finally:
                 sem.release()
                 async with lock:
@@ -211,6 +215,8 @@ class SQLStorage:
                     await self.add_affair(member_id=member.id, affair=affair, vector_id=v_id)
                 elif not await self.is_affair_updated(affair=affair):
                     await self.update_affair(affair=affair)
+            except (sqlite3.IntegrityError):
+                print(f"[{affair.id}] could not save affair")
             finally:
                 sem.release()
                 async with lock:
@@ -232,6 +238,8 @@ class SQLStorage:
             await sem.acquire()
             try:
                 await self.add_edge(edge=edge)
+            except (sqlite3.IntegrityError):
+                print(f"[{edge.id}] could not save edge")
             finally:
                 sem.release()
                 async with lock:

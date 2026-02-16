@@ -1,6 +1,7 @@
 ﻿using politgraph.lib.Interfaces;
 using politgraph.lib.Models;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace politgraph.lib.Data
@@ -14,10 +15,25 @@ namespace politgraph.lib.Data
             _db = db;
         }
 
-        public Task<List<MemberModel>> GetMember()
+        public async Task<List<MemberModel>> GetMembersAsync()
         {
-            string query = "SELECT * FROM member";
-            return _db.LoadData<MemberModel, dynamic>(query, new { });
+            return await _db.LoadDataAsync<MemberModel, dynamic>("SELECT * FROM member", new { });
+        }
+
+        public async Task<List<EdgeModel>> GetEdgesAsync()
+        {
+            return await _db.LoadDataAsync<EdgeModel, dynamic>("SELECT * FROM edge", new { });
+        }
+
+        public async Task<List<string>> GetPartiesAsync()
+        {
+            return await _db.LoadDataAsync<string, dynamic>("SELECT DISTINCT party FROM member", new { });
+        }
+
+        public async Task<MemberModel> GetMemberAsync(int id)
+        {
+            var members = await _db.LoadDataAsync<MemberModel, dynamic>("SELECT * FROM member WHERE member_id = @Id", new { Id = id });
+            return members.FirstOrDefault();
         }
     }
 

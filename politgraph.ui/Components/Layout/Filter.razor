@@ -1,0 +1,45 @@
+﻿@inject IMembersData _db
+@inject IFilterService _filterService
+
+<div class="filter">
+    @foreach (var party in parties!)
+    {
+        <div>
+            <Checkbox @key="party"
+                      Label="@party"
+                      IsChecked="@(_filterService.SelectedParties?.Contains(party) ?? true)"
+                      OnSelectionChanged="OnSelectionChanged" />
+        </div>
+    }
+</div>
+
+@code {
+    private List<string>? parties;
+
+    protected override async Task OnInitializedAsync()
+    {
+        parties = await _db.GetPartiesAsync();
+        _filterService.SetSelectedPartiesDefault(parties);
+        _filterService.SetSelectedStatesDefault(new List<string>() { "Aktiv", "Inaktiv" });
+    }
+
+    private void OnSelectionChanged(CheckBoxStateChangedArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(e.Label))
+        {
+            return;
+        }
+        
+
+        if (e.IsChecked)
+        {
+            _filterService.SelectedParties?.Add(e.Label);
+        }
+        else
+        {
+            _filterService.SelectedParties?.Remove(e.Label);
+
+        }
+
+    }
+}

@@ -76,5 +76,5 @@ class MemberDTO:
 class EdgeDTO:
     member_source: int
     member_target: int
-    weight: int
+    weight: np.float32
 

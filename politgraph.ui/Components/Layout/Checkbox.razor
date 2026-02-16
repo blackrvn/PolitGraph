@@ -1,0 +1,32 @@
+﻿<label>
+    <input type="checkbox"
+            checked="@IsChecked"
+            class="form-check-input"
+            @onchange="SelectionChanged">
+    @Label
+</label>
+
+@code {
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public bool IsChecked { get; set; }
+
+    [Parameter] public EventCallback<CheckBoxStateChangedArgs> OnSelectionChanged { get; set; }
+
+    private async Task SelectionChanged(ChangeEventArgs e)
+    {
+        var state = e.Value switch
+        {
+            bool b => b,
+            string s when bool.TryParse(s, out var b) => b,
+            _ => IsChecked
+        };
+
+        Console.WriteLine($"{Label} changed -> {state}");
+
+        await OnSelectionChanged.InvokeAsync(new CheckBoxStateChangedArgs
+        {
+            IsChecked = state,
+            Label = Label
+        });
+    }
+}

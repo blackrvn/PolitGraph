@@ -7,5 +7,11 @@
         public string LastName { get; set; }
 
         public string? Party { get; set; }
+        public bool Active { get; set; }
+
+        public override string ToString()
+        {
+            return $"[{MemberId}] {FirstName} {LastName}";
+        }
     }
 }

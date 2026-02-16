@@ -1,18 +1,17 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+<div class="app-shell">
+
+    <div class="top-row">
+        <header class="title">politgraph</header>
+        <div>
+            <a href="" target="_blank">Contact</a>
+            <a href="https://github.com/blackrvn/PolitGraph" target="_blank">GitHub</a>
+        </div>
     </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
+    <main class="app-body">
+        @Body
     </main>
 </div>
 

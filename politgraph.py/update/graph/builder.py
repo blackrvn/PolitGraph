@@ -14,7 +14,7 @@ class EdgeBuilder:
                  n_neighbors:int = 10, 
                  metric: str = "cosine", 
                  algorithm: str = "brute",
-                 threshold = 0.6):
+                 threshold = 0.8):
         self._neighbors = n_neighbors
         self._metric = metric
         self._algorithm = algorithm
@@ -66,12 +66,6 @@ class EdgeBuilder:
                     edge = EdgeDTO(source_member.id, target_member.id, sim)
                     edges.append(edge)
 
-
-        for member in members:
-            A = np.reshape(member.w2v_vector, (-1)) # Reshape auf 1D
-            B = np.reshape(member.tfidf_vector, (-1)) # Reshape auf 1D
-            sim = np.dot(A, B) / (norm(A) * norm(B))
-            print(f"[{member.id}] {sim}")
         return edges
         
 

@@ -20,7 +20,7 @@ namespace politgraph.lib.DataAccess
             _config = config;
         }
 
-        public async Task<List<T>> LoadData<T, U>(string sql, U parameters)
+        public async Task<List<T>> LoadDataAsync<T, U>(string sql, U parameters)
         {
             var connectionString = _config.GetConnectionString(ConnectionStringName);
 

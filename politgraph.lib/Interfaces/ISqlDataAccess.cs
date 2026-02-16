@@ -7,6 +7,6 @@ namespace politgraph.lib.Interfaces
     {
         string ConnectionStringName { get; set; }
 
-        Task<List<T>> LoadData<T, U>(string sql, U parameters);
+        Task<List<T>> LoadDataAsync<T, U>(string sql, U parameters);
     }
 }

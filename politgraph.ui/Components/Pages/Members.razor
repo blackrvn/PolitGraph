@@ -39,6 +39,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _members = await _db.GetMember();
+        _members = await _db.GetMembersAsync();
     }
 }

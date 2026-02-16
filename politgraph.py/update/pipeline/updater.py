@@ -5,7 +5,7 @@ from tqdm.auto import tqdm
 
 from update.api.parliament_api import ParliamentApi
 from update.extract.dtos import MemberDTO, AffairDTO
-from update.extract.text_extractors import extract_eingereichter_text_de
+from update.extract.text_extractors import extract_text_de
 from update.storage.sqlite_storage import SQLStorage
 
 
@@ -61,7 +61,7 @@ class Updater:
                         if affair_raw is None:
                             continue
 
-                        text_de = extract_eingereichter_text_de(affair_raw)
+                        text_de = extract_text_de(affair_raw)
                         if text_de is None:
                             continue
 

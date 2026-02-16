@@ -75,3 +75,8 @@ API-Dokumentation: https://api.openparldata.ch/documentation#/
 ### sklearn
 [Copyright (c) 2007-2026 The scikit-learn developers. All rights reserved.](https://github.com/scikit-learn/scikit-learn?tab=BSD-3-Clause-1-ov-file)
 
+
+## Nützliche Links
+https://learn.microsoft.com/en-us/aspnet/core/blazor/components/event-handling?view=aspnetcore-6.0#custom-event-arguments-1
+
+

@@ -1,0 +1,24 @@
+﻿.home-grid {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr;
+    gap: 0;
+}
+
+.filter-container {
+    padding: 16px;
+    border-right: 1px solid;
+    overflow: auto;
+
+}
+
+.graph-container {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.detail-container {
+    padding: 16px;
+    border-left: 1px solid;
+    overflow: auto;
+}

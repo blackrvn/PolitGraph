@@ -1,0 +1,24 @@
+﻿@inject ISelectionService _selectionService
+@implements IDisposable
+
+<div class="container-fluid">
+    <h6>@(_selectionService.Selection?.FirstName ?? "Keine Auswahl") @_selectionService.Selection?.LastName</h6>
+    <h6>@(_selectionService.Selection?.MemberId)</h6>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        _selectionService.OnSelectionChanged += OnChanged;
+    }
+
+    private void OnChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _selectionService.OnSelectionChanged -= OnChanged;
+    }
+}
