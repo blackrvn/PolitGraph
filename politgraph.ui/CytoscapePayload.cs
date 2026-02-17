@@ -21,6 +21,7 @@
         public int Id { get; init; } = default!;
         public string Label { get; init; } = default!;
         public string Party { get; init; } = default!;
+        public string PartyGroup { get; init; } = default!; // Für die Filteranzeige (kleinstparteien ohne eigene Fraktion werden als "andere" gruppiert)
         public string State { get; init; } = default!;
     }
 

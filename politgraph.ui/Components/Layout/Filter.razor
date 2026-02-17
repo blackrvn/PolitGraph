@@ -2,28 +2,38 @@
 @inject IFilterService _filterService
 
 <div class="filter">
-    @foreach (var party in parties!)
+    <h4>Partei</h4>
+    @foreach (var party in FilterGroups.PartyGroups)
     {
         <div>
             <Checkbox @key="party"
                       Label="@party"
                       IsChecked="@(_filterService.SelectedParties?.Contains(party) ?? true)"
-                      OnSelectionChanged="OnSelectionChanged" />
+                      OnSelectionChanged="OnPartySelectionChanged" />
+        </div>
+    }
+
+    <h4>Status</h4>
+    @foreach (var state in FilterGroups.StateGroups)
+    {
+        <div>
+            <Checkbox @key="state"
+                      Label="@state"
+                      IsChecked="@(_filterService.SelectedStates?.Contains(state) ?? true)"
+                      OnSelectionChanged="OnStateSelectionChanged" />
         </div>
     }
 </div>
 
 @code {
-    private List<string>? parties;
 
     protected override async Task OnInitializedAsync()
     {
-        parties = await _db.GetPartiesAsync();
-        _filterService.SetSelectedPartiesDefault(parties);
-        _filterService.SetSelectedStatesDefault(new List<string>() { "Aktiv", "Inaktiv" });
+        _filterService.SetSelectedPartiesDefault(FilterGroups.PartyGroups);
+        _filterService.SetSelectedStatesDefault(FilterGroups.StateGroups);
     }
 
-    private void OnSelectionChanged(CheckBoxStateChangedArgs e)
+    private void OnPartySelectionChanged(CheckBoxStateChangedArgs e)
     {
         if (string.IsNullOrWhiteSpace(e.Label))
         {
@@ -38,6 +48,25 @@
         else
         {
             _filterService.SelectedParties?.Remove(e.Label);
+
+        }
+
+    }
+    private void OnStateSelectionChanged(CheckBoxStateChangedArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(e.Label))
+        {
+            return;
+        }
+        
+
+        if (e.IsChecked)
+        {
+            _filterService.SelectedStates?.Add(e.Label);
+        }
+        else
+        {
+            _filterService.SelectedStates?.Remove(e.Label);
 
         }
 

@@ -5,6 +5,8 @@ namespace politgraph.ui
 {
     public static class CytoscapeMapper
     {
+
+
         public static CytoscapePayload ToCytoscape(
             IEnumerable<MemberModel> nodes,
             IEnumerable<EdgeModel> edges)
@@ -19,6 +21,7 @@ namespace politgraph.ui
                         Id = member.MemberId,
                         Label = $"{member.FirstName} {member.LastName}",
                         Party = member.Party!,
+                        PartyGroup = FilterGroups.PartyGroups.TryGetValue(member.Party!, out var partyGroup) ? partyGroup : "Andere",
                         State = member.Active ? "Aktiv" : "Inaktiv"
                     }
                 };

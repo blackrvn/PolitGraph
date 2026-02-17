@@ -30,7 +30,7 @@ namespace politgraph.ui
         {
             if (Module != null && !IsHydrating)
             {
-                await Module.InvokeVoidAsync("search", SearchText);
+                await Module.InvokeVoidAsync("search", SearchText, SelectedParties, SelectedStates);
             }
         }
 

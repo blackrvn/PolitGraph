@@ -7,6 +7,7 @@ const PARTY_COLORS = {
     "M-E": "#fb7203",
     "glp": "#7e3874",
     "GRÜNE": "#03f61a",
+    "Andere": "#999",
 };
 
 export function create(container, payload, dotNetRef) {
@@ -21,14 +22,13 @@ export function create(container, payload, dotNetRef) {
             {
                 selector: "node",
                 style: {
-                    "background-color": (ele) => PARTY_COLORS[ele.data("party")] ?? "#999",
+                    "background-color": (ele) => PARTY_COLORS[ele.data("party_group")],
                     "border-width": 1,
                     "border-color": "#333",
                     "text-valign": "center",
                     "text-halign": "center",
                     "font-size": 10,
                     "background-blacken": -0.5, //[-1, 1[ -> -1 heller, 1 dunkler
-                    "locked": true,
                 }
             },
             {
@@ -56,6 +56,11 @@ export function create(container, payload, dotNetRef) {
             label: node.data('label') ?? ''
         });
     });
+
+    cy.layout({ name: "cose" }).run().promiseOn('layoutstop').then(() => {
+        cy.autolock(true);
+    });
+    console.log(cy.nodes());
 }
 
 export function hideNodes(nodes) {
@@ -74,9 +79,12 @@ export function showNodes(nodes) {
     }
 }
 
-export function search(searchText) {
+export function search(searchText, visibleParties, visibleStates) {
     let matches = cy.nodes().filter(function (ele) {
-       return ele.data('label').toLowerCase().includes(searchText.toLowerCase());
+        let nameFilter = ele.data('label').toLowerCase().includes(searchText.toLowerCase());
+        let partyFilter = visibleParties.includes(ele.data("party_group"));
+        let stateFilter = visibleStates.includes(ele.data("state"));
+        return partyFilter && stateFilter && nameFilter;
     });
     let neighborhood = matches.neighborhood();
     let nodesToShow = matches.union(neighborhood);
@@ -92,8 +100,9 @@ export function search(searchText) {
 }
 
 export function filter(visibleParties, visibleStates) {
+    console.log(visibleParties);
     let matches = cy.nodes().filter(function (ele) {
-        let partyFilter = visibleParties.includes(ele.data("party"));
+        let partyFilter = visibleParties.includes(ele.data("party_group"));
         let stateFilter = visibleStates.includes(ele.data("state"));
         return partyFilter && stateFilter;
     });
