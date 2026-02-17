@@ -1,5 +1,8 @@
 ﻿let cy;
 
+let prevSelection;
+let currSelection;
+
 const PARTY_COLORS = {
     "SP": "#ff0000",
     "SVP": "#007832",
@@ -50,17 +53,24 @@ export function create(container, payload, dotNetRef) {
 
     cy.on('select', 'node', function (evt) {
         const node = evt.target;
-        console.log(node.data('label'));
         dotNetRef.invokeMethodAsync('OnMemberSelected', {
             id: node.id(),
-            label: node.data('label') ?? ''
+            label: node.data('label') ?? '',
         });
+    });
+
+    cy.on('unselect', 'node', function () {
+        // Guard gegen fälschliches feuern, wenn A->B
+        setTimeout(() => {
+            if (cy.$(':selected').length === 0) {
+                dotNetRef.invokeMethodAsync('OnMemberDeselected');
+            }
+        }, 50);
     });
 
     cy.layout({ name: "cose" }).run().promiseOn('layoutstop').then(() => {
         cy.autolock(true);
     });
-    console.log(cy.nodes());
 }
 
 export function hideNodes(nodes) {

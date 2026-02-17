@@ -62,11 +62,17 @@ namespace politgraph.ui.Components.Layout
         }
 
         [JSInvokable]
+        public async Task OnMemberDeselected()
+        {
+            _selectionService?.SetSelection(null);
+        }
+
+        [JSInvokable]
         public async Task OnMemberSelected(NodeSelectedArgs args)
         {
-            // Id wird von JSInterop als string übergeben
-            try
+            if (args.Id != null)
             {
+                // Id wird von JSInterop als string übergeben
                 if (int.TryParse(args.Id, out var id))
                 {
                     var member = await _db.GetMemberAsync(id);
@@ -74,12 +80,9 @@ namespace politgraph.ui.Components.Layout
                     Debug.WriteLine(member);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"Error: {ex.Message}");
-                Console.WriteLine($"Inner: {ex.InnerException?.Message}");
-                Console.WriteLine($"Stack: {ex.StackTrace}");
-                Console.WriteLine($"Full: {ex}");
+                _selectionService?.SetSelection(null);
             }
         }
 

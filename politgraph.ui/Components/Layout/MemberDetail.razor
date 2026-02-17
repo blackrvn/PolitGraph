@@ -1,20 +1,70 @@
 ﻿@inject ISelectionService _selectionService
+@inject IAffairsData _db
 @implements IDisposable
 
-<div class="container-fluid">
-    <h6>@(_selectionService.Selection?.FirstName ?? "Keine Auswahl") @_selectionService.Selection?.LastName</h6>
-    <h6>@(_selectionService.Selection?.MemberId)</h6>
-</div>
+@if(_member == null)
+{
+    <div>
+        <h4>Keine Auswahl</h4>
+    </div>
+}
+else
+{
+    <div class="container-fluid">
+        <div class="member-header">
+            <h4>@(_member?.FirstName) @_member?.LastName</h4>
+            <p>@_member?.Party</p>
+            <p>@(_member?.MemberId)</p>
+        </div>
+
+
+        @if(_affairs == null)
+        {
+            <p>Lade Geschäfte...</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Titel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var affair in _affairs)
+                    {
+                        <tr>
+                            <td>@affair.AffairId</td>
+                            <td>@affair.Title</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+}
+
 
 @code {
+    private MemberModel? _member;
+    private List<AffairModel>? _affairs;
+
     protected override void OnInitialized()
     {
+
         _selectionService.OnSelectionChanged += OnChanged;
     }
 
-    private void OnChanged()
+    private async void OnChanged()
     {
-        InvokeAsync(StateHasChanged);
+        _member = _selectionService.Selection;
+        if(_member != null)
+        {
+            _affairs = await _db.GetAffairsOfMemberAsync(_member.MemberId);
+        }
+        // Damit das UI aktuell bleibt
+        await InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()

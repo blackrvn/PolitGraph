@@ -1,12 +1,11 @@
 ﻿using politgraph.lib.Interfaces;
 using politgraph.lib.Models;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace politgraph.lib.Data
 {
-    public class AffairsData
+    public class AffairsData : IAffairsData
     {
         private readonly ISqlDataAccess _db;
 
@@ -15,9 +14,9 @@ namespace politgraph.lib.Data
             _db = db;
         }
 
-        public Task<List<AffairModel>> GetAffairs()
+        public async Task<List<AffairModel>> GetAffairsOfMemberAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _db.LoadDataAsync<AffairModel, dynamic>("SELECT * FROM affair WHERE member_id = @Id", new { Id = id });
         }
     }
 }

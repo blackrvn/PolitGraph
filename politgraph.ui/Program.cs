@@ -20,6 +20,7 @@ builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddSingleton<IFilterService, FilterService>();
 builder.Services.AddSingleton<ISelectionService, SelectionService>();
 builder.Services.AddTransient<IMembersData, MembersData>();
+builder.Services.AddTransient<IAffairsData, AffairsData>();
 builder.Services.AddTransient<AffairsData>();
 builder.Services.AddTransient<MembersGraph>();
 
