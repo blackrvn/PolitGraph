@@ -43,6 +43,8 @@ async def run_app(args: Any) -> None:
         threshold=args.threshold,
     )
 
+    evaluate = getattr(args, "evaluate", False)
+
     try:
         if args.rebuild_edges:
             members = await storage.load_members_with_vectors()
@@ -60,7 +62,11 @@ async def run_app(args: Any) -> None:
         pbar = tqdm(total=5, desc="Update", unit="tasks")
 
         # Sammeln
-        docs, members = await updater.fetch_documents(concurrency=int(args.concurrency))
+        docs, members = await updater.fetch_documents(
+            concurrency=int(args.concurrency),
+            offset=args.offset,
+            active=args.active,
+        )
         pbar.update(1)
 
         if len(docs) == 0:
@@ -70,11 +76,12 @@ async def run_app(args: Any) -> None:
             await cleaner.clean_documents(docs=docs, concurrency=int(args.concurrency))
             pbar.update(1)
 
-            if getattr(args, "evaluate", False):
+            # Doc2Vec: Vollständige oder schnelle Evaluation
+            if evaluate:
                 evaluator = Doc2VecEvaluator(docs=docs)
                 results = evaluator.run()
                 best_config = evaluator.best.config
-                print(f"Beste Config: {evaluator.best}")
+                print(f"Beste Doc2Vec-Config: {evaluator.best}")
             else:
                 best_config = Doc2VecConfig()
 
@@ -84,6 +91,14 @@ async def run_app(args: Any) -> None:
             d2v_embedder = Doc2VecEmbedder(config=best_config)
             d2v_embedder.embed_documents(docs=docs)
             d2v_embedder.embed_members(members=members)
+
+            if not evaluate:
+                quick_result = Doc2VecEvaluator.quick_evaluate(
+                    model=d2v_embedder.model,
+                    docs=docs,
+                )
+                print(f"Doc2Vec: {quick_result}")
+
             pbar.update(1)
 
             edges = edge_builder.calculate_neighbors_d2v(members=members)

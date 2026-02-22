@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 from typing import Any, Dict, List, Tuple
 
 from tqdm.auto import tqdm
@@ -32,8 +32,8 @@ class Updater:
         self._api = api
         self._storage = storage
 
-    async def fetch_documents(self, *, concurrency: int = 10) -> Tuple[List[Tuple[MemberDTO, AffairDTO]], List[MemberDTO]]:
-        member_ids = await self._api.list_active_member_ids()
+    async def fetch_documents(self, *, concurrency: int = 10, offset: int= 0, active: bool = True) -> Tuple[List[Tuple[MemberDTO, AffairDTO]], List[MemberDTO]]:
+        member_ids = await self._api.list_member_ids(active=active, offset=offset)
         member_ids = list(member_ids)
         sem = asyncio.Semaphore(concurrency)
 

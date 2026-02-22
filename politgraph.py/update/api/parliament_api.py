@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Set
+﻿from typing import Any, Dict, List, Optional, Set
 
 import httpx
 
@@ -53,6 +53,11 @@ class ParliamentApi:
     async def list_active_member_ids(self) -> Set[int]:
         return await self._get_paginated_ids(
             "persons/?body_key=CHE&active=true"
+        )
+
+    async def list_member_ids(self, offset: int, active: bool) -> Set[int]:
+        return await self._get_paginated_ids(
+            f"persons/?body_key=CHE&active={'true' if active else 'false'}&offset={offset}"
         )
 
     async def get_member(self, member_id: int) -> Optional[Dict[str, Any]]:

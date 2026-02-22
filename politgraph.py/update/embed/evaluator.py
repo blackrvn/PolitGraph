@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Doc2VecConfig:
     vector_size: int = 256
-    window: int = 5
+    window: int = 8
     min_count: int = 2
     epochs: int = 40
     dm: int = 0
@@ -54,6 +54,20 @@ class EvalResult:
 
     def __str__(self):
         return f"{self.config}  →  Acc={self.accuracy:.3f}  Stab={self.infer_stability:.4f}"
+
+
+@dataclass
+class QuickEvalResult:
+    """Kompaktes Ergebnis für die schnelle Evaluation ohne --evaluate."""
+    accuracy: float
+    num_classes: int
+    num_samples: int
+
+    def __str__(self):
+        return (
+            f"Quick-Eval: Accuracy={self.accuracy:.1%} "
+            f"({self.num_samples} Test-Dokumente, {self.num_classes} Parteien)"
+        )
 
 
 class Doc2VecEvaluator:
@@ -115,6 +129,48 @@ class Doc2VecEvaluator:
         self.results.sort(key=lambda r: r.accuracy, reverse=True)
         self._log_summary()
         return self.results
+
+    @staticmethod
+    def quick_evaluate(
+        model: Doc2Vec,
+        docs: List[Tuple[MemberDTO, AffairDTO]],
+        test_size: float = 0.10,
+        k_neighbors: int = 5,
+        infer_epochs: int = 50,
+        random_state: int = 42,
+    ) -> QuickEvalResult:
+        """
+        Schnelle Evaluation eines bereits trainierten Doc2Vec-Modells.
+        Wird immer ausgeführt (auch ohne --evaluate) um eine kurze
+        Zusammenfassung der Modellqualität zu liefern.
+        """
+        labels = [member.party for (member, _) in docs]
+
+        train_docs, test_docs, train_labels, test_labels = train_test_split(
+            docs, labels,
+            test_size=test_size,
+            random_state=random_state,
+            stratify=labels,
+        )
+
+        train_vectors = np.array([model.dv[doc.id] for (_, doc) in train_docs])
+        test_vectors = np.array([
+            model.infer_vector(doc.tagged_doc.words, epochs=infer_epochs)
+            for (_, doc) in test_docs
+        ])
+
+        clf = KNeighborsClassifier(n_neighbors=k_neighbors, metric="cosine")
+        clf.fit(train_vectors, train_labels)
+        accuracy = clf.score(test_vectors, test_labels)
+
+        result = QuickEvalResult(
+            accuracy=accuracy,
+            num_classes=len(set(labels)),
+            num_samples=len(test_docs),
+        )
+
+        logger.info(f"  {result}")
+        return result
 
     def _evaluate(
         self,
