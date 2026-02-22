@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import sqlite3
 from typing import Any, Dict, List, Tuple
 
@@ -10,6 +11,9 @@ from update.extract.dtos import AffairDTO, EdgeDTO, MemberDTO
 from update.common import util
 
 sqlite3.register_adapter(np.float32, float)
+
+logger = logging.getLogger(__name__)
+
 
 class SQLStorage:
     def __init__(self, *, connection_string: str, concurrency: int = 10):
@@ -173,6 +177,38 @@ class SQLStorage:
                 )
             cursor.execute(query, params)
             conn.commit()
+
+    async def delete_edges(self):
+        with sqlite3.connect(self._connection_string) as conn:
+            conn.execute("DELETE FROM edge")
+            conn.commit()
+            logger.info("Deleted all existing edges")
+
+    async def load_members_with_vectors(self) -> List[MemberDTO]:
+        with sqlite3.connect(self._connection_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT m.member_id, m.first_name, m.last_name, m.active, m.party, m.updated_at,
+                       v.w2v_vector
+                FROM member m
+                JOIN vector v ON m.vector_id = v.vector_id
+                WHERE v.w2v_vector IS NOT NULL
+            """)
+            members = []
+            for row in cursor.fetchall():
+                member = MemberDTO(
+                    id=row[0],
+                    first_name=row[1],
+                    last_name=row[2],
+                    active=row[3],
+                    party=row[4],
+                    updated_at=row[5],
+                    tfidf_vector=None,
+                    w2v_vector=np.frombuffer(row[6], dtype=np.float32).reshape(1, -1),
+                    _raw={},
+                )
+                members.append(member)
+            return members
 
     
     async def save_members(self, members: List[MemberDTO]):

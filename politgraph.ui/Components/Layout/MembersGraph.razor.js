@@ -1,8 +1,5 @@
 ﻿let cy;
 
-let prevSelection;
-let currSelection;
-
 const PARTY_COLORS = {
     "SP": "#ff0000",
     "SVP": "#007832",
@@ -16,10 +13,16 @@ const PARTY_COLORS = {
 export function create(container, payload, dotNetRef) {
     if (typeof payload === "string") payload = JSON.parse(payload);
 
+
     cy = cytoscape({
         container,
         elements: payload.elements,
-        layout: { name: "cose" },
+        layout: {
+            name: 'cose-bilkent',
+            idealEdgeLength: 150,
+            nodeRepulsion: 6000,
+            gravity: 0.25,
+        },
 
         style: [
             {
@@ -68,7 +71,7 @@ export function create(container, payload, dotNetRef) {
         }, 50);
     });
 
-    cy.layout({ name: "cose" }).run().promiseOn('layoutstop').then(() => {
+    cy.on('layoutstop', () => {
         cy.autolock(true);
     });
 }

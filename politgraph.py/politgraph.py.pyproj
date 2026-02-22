@@ -34,6 +34,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="update\embed\cleaner.py" />
+    <Compile Include="update\embed\evaluator.py" />
     <Compile Include="update\embed\__init__.py">
       <SubType>Code</SubType>
     </Compile>

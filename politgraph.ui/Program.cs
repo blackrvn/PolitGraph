@@ -24,6 +24,10 @@ builder.Services.AddTransient<IAffairsData, AffairsData>();
 builder.Services.AddTransient<AffairsData>();
 builder.Services.AddTransient<MembersGraph>();
 
+builder.Services.AddServerSideBlazor(options =>
+{
+    options.DetailedErrors = true;
+});
 
 var app = builder.Build();
 

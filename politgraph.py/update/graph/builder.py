@@ -1,4 +1,4 @@
-from typing import List
+ï»¿from typing import List
 
 from scipy.sparse import vstack
 
@@ -8,13 +8,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from numpy.linalg import norm
 
-
 class EdgeBuilder:
     def __init__(self, *, 
-                 n_neighbors:int = 10, 
+                 n_neighbors:int = 5, 
                  metric: str = "cosine", 
                  algorithm: str = "brute",
-                 threshold = 0.8):
+                 threshold = 0.5):
         self._neighbors = n_neighbors
         self._metric = metric
         self._algorithm = algorithm
@@ -37,7 +36,7 @@ class EdgeBuilder:
             for i in range(1, len(kn)): # kn[0] == self-match
                 n = kn[i]
                 target_member = members[n]
-                sim = 1 - dist[idx][i] # 1 - Distanz = Ähnlichkeit 
+                sim = 1 - dist[idx][i] # 1 - Distanz = Ã„hnlichkeit 
                 if sim >= self._threshold:
                     edge = EdgeDTO(source_member.id, target_member.id, sim)
                     edges.append(edge)
@@ -61,7 +60,7 @@ class EdgeBuilder:
             for i in range(1, len(kn)): # kn[0] == self-match
                 n = kn[i]
                 target_member = members[n]
-                sim = 1 - dist[idx][i] # 1 - Distanz = Ähnlichkeit 
+                sim = 1 - dist[idx][i] # 1 - Distanz = Ã„hnlichkeit 
                 if sim >= self._threshold:
                     edge = EdgeDTO(source_member.id, target_member.id, sim)
                     edges.append(edge)
