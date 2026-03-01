@@ -17,10 +17,10 @@ def build_parser() -> argparse.ArgumentParser:
         )
     p.add_argument(
         "--active",
-        type=bool,
-        default=True,
+        action="store_true",
+        default=False,
         help="If true, only active members will be retrieved"
-        )
+    )
     p.add_argument(
         "--concurrency",
         type=int,
