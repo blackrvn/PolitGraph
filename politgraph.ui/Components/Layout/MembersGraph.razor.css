@@ -1,3 +1,31 @@
 ﻿.cy {
     height: 100%;
+    position: relative
+}
+
+/* Von claude am 01.03 generiert*/
+/*----*/
+.table-transparent,
+.table-transparent > :not(caption) > * > * {
+    background-color: transparent !important;
+    --bs-table-bg: transparent;
+    border: none !important;
+    vertical-align: middle;
+}
+/*----*/
+
+.legend {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    background-color: transparent;
+    margin: 16px;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    margin: 16px, 0px;
+    border-radius: 50%;
 }

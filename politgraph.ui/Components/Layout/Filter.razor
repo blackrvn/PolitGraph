@@ -3,7 +3,7 @@
 
 <div class="filter">
     <h4>Partei</h4>
-    @foreach (var party in FilterGroups.PartyGroups)
+    @foreach (var party in FilterGroups.GetPartyGroups())
     {
         <div>
             <Checkbox @key="party"
@@ -14,7 +14,7 @@
     }
 
     <h4>Status</h4>
-    @foreach (var state in FilterGroups.StateGroups)
+    @foreach (var state in FilterGroups.GetStateGroups())
     {
         <div>
             <Checkbox @key="state"
@@ -29,8 +29,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _filterService.SetSelectedPartiesDefault(FilterGroups.PartyGroups);
-        _filterService.SetSelectedStatesDefault(FilterGroups.StateGroups);
+        _filterService.SetSelectedPartiesDefault(FilterGroups.GetPartyGroups());
+        _filterService.SetSelectedStatesDefault(FilterGroups.GetStateGroups());
     }
 
     private void OnPartySelectionChanged(CheckBoxStateChangedArgs e)

@@ -1,5 +1,6 @@
 ﻿namespace politgraph.ui
 {
+
     public sealed class CytoscapePayload
     {
         public CytoscapeElements Elements { get; init; } = new();
@@ -22,6 +23,7 @@
         public string Label { get; init; } = default!;
         public string Party { get; init; } = default!;
         public string PartyGroup { get; init; } = default!; // Für die Filteranzeige (kleinstparteien ohne eigene Fraktion werden als "andere" gruppiert)
+        public string Color { get; init; } = default!;
         public string State { get; init; } = default!;
     }
 

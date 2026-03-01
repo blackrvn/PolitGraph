@@ -16,6 +16,8 @@ namespace politgraph.ui.Components.Layout
         private IJSObjectReference? Module { get; set; }
         private ElementReference GraphContainer { get; set; }
 
+        private List<string> Parties { get; set; }
+
         private EventCallback<string> SelectionChanged { get; set; }
 
         public MembersGraph(IJSRuntime js, IMembersData db, IFilterService filterService, ISelectionService selectionService)
@@ -26,6 +28,10 @@ namespace politgraph.ui.Components.Layout
             _selectionService = selectionService;
         }
 
+        protected override async Task OnInitializedAsync()
+        {
+            Parties = await _db.GetPartiesAsync();
+        }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {

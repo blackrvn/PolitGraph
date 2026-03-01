@@ -21,8 +21,9 @@ namespace politgraph.ui
                         Id = member.MemberId,
                         Label = $"{member.FirstName} {member.LastName}",
                         Party = member.Party!,
-                        PartyGroup = FilterGroups.PartyGroups.TryGetValue(member.Party!, out var partyGroup) ? partyGroup : "Andere",
-                        State = member.Active ? "Aktiv" : "Inaktiv"
+                        PartyGroup = FilterGroups.GetPartyGroup(member.Party!),
+                        Color = FilterGroups.GetColorForParty(member.Party!),
+                        State = FilterGroups.GetStateGroup(member.Active)
                     }
                 };
                 payload.Elements.Nodes.Add(node);

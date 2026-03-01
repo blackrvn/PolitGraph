@@ -1,14 +1,5 @@
 ﻿let cy;
 
-const PARTY_COLORS = {
-    "SP": "#ff0000",
-    "SVP": "#007832",
-    "FDP-Liberale": "#0044d5",
-    "M-E": "#fb7203",
-    "glp": "#7e3874",
-    "GRÜNE": "#03f61a",
-    "Andere": "#999",
-};
 
 export function create(container, payload, dotNetRef) {
     if (typeof payload === "string") payload = JSON.parse(payload);
@@ -28,7 +19,7 @@ export function create(container, payload, dotNetRef) {
             {
                 selector: "node",
                 style: {
-                    "background-color": (ele) => PARTY_COLORS[ele.data("party_group")],
+                    "background-color": (ele) => ele.data("color"),
                     "border-width": 1,
                     "border-color": "#333",
                     "text-valign": "center",
