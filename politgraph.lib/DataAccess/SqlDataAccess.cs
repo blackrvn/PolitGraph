@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 using Microsoft.Extensions.Configuration;
 using politgraph.lib.Interfaces;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ namespace politgraph.lib.DataAccess
     {
         private readonly IConfiguration _config;
 
-        public string ConnectionStringName { get; set; } = "Default";
+        public string ConnectionStringName { get; set; } = "Read";
 
         public SqlDataAccess(IConfiguration config)
         {
@@ -24,7 +24,7 @@ namespace politgraph.lib.DataAccess
         {
             var connectionString = _config.GetConnectionString(ConnectionStringName);
 
-            using (IDbConnection connection = new SqliteConnection(connectionString))
+            using (IDbConnection connection = new NpgsqlConnection(connectionString))
             {
                 var data = await connection.QueryAsync<T>(sql, parameters);
                 return data.ToList();
