@@ -365,3 +365,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 *.db
+/politgraph.ui/appsettings.json
