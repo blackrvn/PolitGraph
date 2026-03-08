@@ -78,6 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="readme.md" />
+    <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="update\common\" />
