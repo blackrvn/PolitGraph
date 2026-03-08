@@ -1,0 +1,8 @@
+﻿.filter{
+    display: flex;
+    flex-direction: column;
+}
+
+h4{
+    margin-top: 0.5rem;
+}

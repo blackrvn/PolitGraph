@@ -1,0 +1,27 @@
+﻿@page "/"
+@layout MainLayout
+@rendermode InteractiveServer
+@inject IFilterService _filterService
+
+<div class="home-grid">
+    <aside class="filter-container">
+        <Filter />
+    </aside>
+
+    <section class="graph-container">
+        <SearchBox OnSearch="OnSearchTextChanged"/>
+        <MembersGraph />
+    </section>
+
+    <aside class="detail-container">
+        <MemberDetail />
+    </aside>
+</div>
+
+
+@code {
+    private void OnSearchTextChanged(string searchText)
+    {
+        _filterService.SearchText = searchText;
+    }
+}

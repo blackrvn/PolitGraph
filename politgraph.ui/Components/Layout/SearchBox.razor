@@ -1,0 +1,21 @@
+﻿
+<div class="search-box">
+    <input @bind="_searchText" placeholder="Suchen..."  @bind:after="OnSearchChanged" />
+    <div class="search-icon">
+        <i class="fi fi-rr-search"/>
+    </div>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public EventCallback<string> OnSearch { get; set; }
+
+    private string _searchText = string.Empty;
+
+    private async Task OnSearchChanged()
+    {
+        await OnSearch.InvokeAsync(_searchText);
+    }
+}

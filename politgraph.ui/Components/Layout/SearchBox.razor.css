@@ -1,0 +1,29 @@
+﻿.search-box {
+    margin: 16px;
+    border: 1px solid;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-grow: 1;
+    height: 36px;
+    padding: 0 16px;
+    font-family: Arial;
+    font-size: 18px;
+    font-style: italic;
+}
+
+.search-icon {
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    font-size: 18px; 
+    font-style: normal;
+    line-height: 1;
+}
+
+input {
+    display: flex;
+    flex-grow: 1;
+    border: hidden
+}

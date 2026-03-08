@@ -1,0 +1,25 @@
+.app-shell{
+    height: 100vh;
+    display:grid;
+    grid-template-rows: 128px 1fr;
+}
+
+.app-body{
+    min-height: 0;
+}
+
+.top-row {
+    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    min-height: contain;
+    padding: 16px;
+    border-bottom: 1px solid;
+}
+
+.title {
+    font-family: 'Swiss 721';
+    font-size: 48px;
+}
+

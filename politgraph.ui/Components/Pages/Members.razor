@@ -1,0 +1,44 @@
+﻿@page "/Data/Members"
+
+@inject IMembersData _db;
+
+<h3>Parlamentarier:innen</h3>
+
+@if (_members == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Partei</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var member in _members)
+            {
+                <tr>
+                    <td>@member.MemberId</td>
+                    <td>@member.FirstName</td>
+                    <td>@member.LastName</td>
+                    <td>@member.Party</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    private List<MemberModel>? _members;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _members = await _db.GetMembersAsync();
+    }
+}

@@ -1,0 +1,18 @@
+﻿label {
+    font-family: Arial;
+    font-size: 1rem;
+    display: grid;
+    grid-template-columns: 2em auto;
+    gap: 0.5em;
+    align-content: center;
+    margin: 0.25em 0;
+}
+
+input[type="checkbox"].form-check-input {
+    background-color: #fff;
+    border-color: #888;
+}
+
+    input[type="checkbox"].form-check-input:checked {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+    }

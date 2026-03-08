@@ -1,0 +1,32 @@
+﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<div @ref=GraphContainer class="cy">
+
+    <div class="legend">
+        @if (Parties == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+            <table class="table table-transparent">
+                <tbody>
+                    @foreach (var party in FilterGroups.GetPartyGroups())
+                    {
+                        <tr>
+                            <td>
+                                <div class="legend-color" style="background-color: @FilterGroups.GetColorForParty(party);"></div>
+                            </td>
+                            <td>@party</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+
+
+}
