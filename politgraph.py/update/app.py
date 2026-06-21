@@ -1,13 +1,14 @@
 ﻿from pathlib import Path
 import sys
+import os
 from typing import Any
 from tqdm.auto import tqdm
-import de_core_news_sm
+import spacy
 from update.api.http_client import HttpClient
 from update.api.parliament_api import ParliamentApi
 from update.graph.builder import EdgeBuilder
 from update.pipeline.updater import Updater
-from update.storage.sqlite_storage import SQLStorage
+from update.storage.postgres_storage import SQLStorage
 from update.embed.cleaner import Cleaner
 from update.embed.embedder import TfIdfEmbedder, Doc2VecEmbedder, Doc2VecConfig
 from update.embed.evaluator import Doc2VecEvaluator
@@ -19,7 +20,6 @@ logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
     handlers=[
         logging.StreamHandler(open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False)),
-        logging.FileHandler("politgraph.log", mode="a", encoding="utf-8"),
     ],
 )
 
@@ -30,11 +30,11 @@ logging.getLogger("gensim").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 async def run_app(args: Any) -> None:
-    nlp = de_core_news_sm.load(disable=["tagger", "parser", "ner", "textcat"])
+    nlp = spacy.load("de_core_news_sm", disable=["tagger", "parser", "ner", "textcat"])
     http = HttpClient(base_url='https://api.openparldata.ch/v1/', timeout_seconds=10)
     api = ParliamentApi(http=http)
     project_root = Path(__file__).parent.parent.parent.resolve()
-    storage = SQLStorage(connection_string=f"{project_root}/politgraph.db")
+    storage = SQLStorage(connection_string=os.environ["POLITGRAPH_DB_CONNECTION_WRITER"])
     updater = Updater(api=api, storage=storage)
     cleaner = Cleaner(nlp=nlp)
     tfidf_embedder = TfIdfEmbedder()

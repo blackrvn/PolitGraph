@@ -67,9 +67,12 @@ class Updater:
 
                         affair_raw["text_raw"] = text_de
                         affair = AffairDTO.from_api(affair_raw)
-                        async with lock:
-                            docs.append((member, affair))
-                            affair_count += 1
+                        if(affair.is_valid()):
+                            async with lock:
+                                docs.append((member, affair))
+                                affair_count += 1
+                        else:
+                            print(f"[{affair.id}] Affair is not valid")
                             
                     if affair_count > 0:
                         async with lock:

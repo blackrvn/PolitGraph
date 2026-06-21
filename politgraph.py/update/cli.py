@@ -1,6 +1,7 @@
 ﻿import argparse
 import asyncio
-
+import sys
+import selectors
 from update.app import run_app
 
 
@@ -56,4 +57,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-    asyncio.run(run_app(args))
+    if sys.platform == "win32":
+        #psycopg unterstützen ProactorEventLoop, den Windows standardmässig verwenndet, nicht
+        asyncio.run(
+            run_app(args),
+            loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector())
+        )
+    else:
+        asyncio.run(run_app(args))

@@ -1,0 +1,41 @@
+services:
+  politgraph-ui:
+    image: ghcr.io/blackrvn/politgraph-ui:latest
+    container_name: politgraph-ui
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Read=${POLITGRAPH_DB_CONNECTION_READER}
+      - ConnectionStrings__Write=${POLITGRAPH_DB_CONNECTION_WRITER}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - politgraph-db
+
+  politgraph-db:
+    image: postgres:18
+    container_name: politgraph-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES}
+      POSTGRES_DB: politgraph
+      READER_PASSWORD: ${READER_PASSWORD}
+      WRITER_PASSWORD: ${WRITER_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./init.sh:/docker-entrypoint-initdb.d/init.sh
+    ports:
+      - "5431:5432"
+    restart: unless-stopped
+
+  update:
+    image: ghcr.io/blackrvn/politgraph-update:latest
+    container_name: politgraph-update
+    environment:
+      - POLITGRAPH_DB_CONNECTION_WRITER=${POLITGRAPH_DB_CONNECTION_WRITER}
+    depends_on:
+      - politgraph-db
+    profiles: [update]
+
+volumes:
+  pgdata:

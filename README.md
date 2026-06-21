@@ -39,7 +39,123 @@ Phase 2: 02.02 ?? -> Nachfragen zur Einschätzung des Aufwandes
 Phase 3.1: 16.02 -> Erster UI Prototyp zum Start von Semester fertig
 Phase 3.2: 06.04 -> UI fertigstellen
 Phase 4: 06.07
+
+## Deployment
+### Images
+```bash
+$ echo $envVariableZuToken | docker login ghcr.io -u blackrvn --password-stdin
+$ cd ./Politgraph/
+$ docker buildx build --platform linux/arm64 -t ghcr.io/blackrvn/politgraph-ui:latest --push -f ./politgraph.ui/Dockerfile .
+$ docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/blackrvn/politgraph-update:latest . --push
+```
+Wird ein Dockerimage auf [GitHub](https://github.com/blackrvn?tab=packages&repo_name=PolitGraph) veröffentlichen.
+
+### Raspberry Pi Setup
+Um die Container auf dem Raspberry laufen zu lassen, müssen Umgebungsvariablen für die ConnectionStrings erstellt werden.
+Die Formate unterscheiden sich je nach Consumer:
+
+**Npgsql** (Blazor UI):
+```
+Host=192.168.0.19;Port=5431;Database=politgraph;Username=reader;Password=***
+```
+
+**psycopg** (Python Update):
+```
+host=192.168.0.19 port=5431 dbname=politgraph user=writer password=***
+```
+
+```bash
+$ mkdir ./politgraph
+$ cd ./politgraph
+$ nano .env
+POLITGRAPH_DB_CONNECTION_READER=Host=...      # Npgsql Format
+POLITGRAPH_DB_CONNECTION_WRITER=host=...      # psycopg Format
+POSTGRES=***
+READER_PASSWORD=***                           # muss mit Passwort im READER Connection String übereinstimmen
+WRITER_PASSWORD=***                           # muss mit Passwort im WRITER Connection String übereinstimmen
+```
+
+### Datenbank-Initialisierung
+Beim ersten Start wird `init.sh` automatisch ausgeführt (via `/docker-entrypoint-initdb.d/`).
+Das Script erstellt die Rollen (`reader`, `writer`) mit entsprechenden Berechtigungen sowie alle Tabellen (`vector`, `member`, `affair`, `edge`).
+
+> **Hinweis:** Das Script wird nur bei einem frischen Volume ausgeführt. Bei einem bestehenden Volume wird es ignoriert.
+
+### Docker Compose
+```yml
+services:
+  politgraph-ui:
+    image: ghcr.io/blackrvn/politgraph-ui:latest
+    container_name: politgraph-ui
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Read=${POLITGRAPH_DB_CONNECTION_READER}
+      - ConnectionStrings__Write=${POLITGRAPH_DB_CONNECTION_WRITER}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - politgraph-db
+
+  politgraph-db:
+    image: postgres:18
+    container_name: politgraph-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES}
+      POSTGRES_DB: politgraph
+      READER_PASSWORD: ${READER_PASSWORD}
+      WRITER_PASSWORD: ${WRITER_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./init.sh:/docker-entrypoint-initdb.d/init.sh
+    ports:
+      - "5431:5432"
+    restart: unless-stopped
+
+  update:
+    image: ghcr.io/blackrvn/politgraph-update:latest
+    container_name: politgraph-update
+    environment:
+      - POLITGRAPH_DB_CONNECTION_WRITER=${POLITGRAPH_DB_CONNECTION_WRITER}
+    depends_on:
+      - politgraph-db
+    profiles: [update]
+
+volumes:
+  pgdata:
+```
+
+### Befehle
+```bash
+# Images aktualisieren
+docker compose pull
+
+# UI und DB starten
+docker compose up -d
+
+# Update manuell starten
+docker compose run --rm update
+
+# Update mit anderen Argumenten starten
+docker compose run --rm -d update --threshold 0.5
+
+# Logs des Update-Containers anzeigen
+docker logs politgraph-update
+
+# Alle Container stoppen
+docker compose down
+```
+
+### Cronjob
+Der `update` Container wird monatlich am 1. über einen Cronjob auf dem Hostsystem gestartet:
+```
+0 0 1 * * cd ~/politgraph/ && docker compose run --rm update >> /var/log/politgraph-update.log 2>&1
+```
+
+
 ## Quellen
+
 API: https://api.openparldata.ch/v1/
 
 API-Dokumentation: https://api.openparldata.ch/documentation#/
@@ -79,5 +195,6 @@ API-Dokumentation: https://api.openparldata.ch/documentation#/
 ## Nützliche Links
 [JsInterop Events](https://learn.microsoft.com/en-us/aspnet/core/blazor/components/event-handling?view=aspnetcore-6.0#custom-event-arguments-1)
 [JsInterop](https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-9.0)
+[Dockerize Python](https://docs.docker.com/guides/python/containerize/)
 
 
