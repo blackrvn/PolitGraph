@@ -46,7 +46,7 @@ Phase 4: 06.07
 $ echo $GITHUB_TOKEN | docker login ghcr.io -u blackrvn --password-stdin
 $ cd ./Politgraph/
 $ docker buildx build --platform linux/arm64 -t ghcr.io/blackrvn/politgraph-ui:latest --push -f ./politgraph.ui/Dockerfile .
-$ docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/blackrvn/politgraph-update:latest . --push
+$ docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/blackrvn/politgraph-update:latest --push -f "politgraph.py/Dockerfile" "politgraph.py"
 ```
 Wird ein Dockerimage auf [GitHub](https://github.com/blackrvn?tab=packages&repo_name=PolitGraph) veröffentlichen.
 

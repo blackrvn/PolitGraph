@@ -51,6 +51,7 @@ class Updater:
                     return
 
                 member = MemberDTO.from_api(member_raw)
+                member._raw = {}
 
                 if not await self._storage.is_member_updated(member=member):
                     affair_ids = await self._api.list_affair_ids_for_member(member_id)
@@ -67,6 +68,7 @@ class Updater:
 
                         affair_raw["text_raw"] = text_de
                         affair = AffairDTO.from_api(affair_raw)
+                        affair._raw = {}
                         if(affair.is_valid()):
                             async with lock:
                                 docs.append((member, affair))
