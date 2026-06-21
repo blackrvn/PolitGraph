@@ -4,8 +4,8 @@ services:
     container_name: politgraph-ui
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__Read=${POLITGRAPH_DB_CONNECTION_READER}
-      - ConnectionStrings__Write=${POLITGRAPH_DB_CONNECTION_WRITER}
+      - ConnectionStrings__Read=Host=politgraph-db;Port=5432;Database=politgraph;Username=reader;Password=${READER_PASSWORD}
+      - ConnectionStrings__Write=Host=politgraph-db;Port=5432;Database=politgraph;Username=writer;Password=${WRITER_PASSWORD}
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -32,7 +32,7 @@ services:
     image: ghcr.io/blackrvn/politgraph-update:latest
     container_name: politgraph-update
     environment:
-      - POLITGRAPH_DB_CONNECTION_WRITER=${POLITGRAPH_DB_CONNECTION_WRITER}
+      - POLITGRAPH_DB_CONNECTION_WRITER=host=politgraph-db port=5432 dbname=politgraph user=writer password=${WRITER_PASSWORD}
     depends_on:
       - politgraph-db
     profiles: [update]

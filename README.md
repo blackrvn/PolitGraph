@@ -43,7 +43,7 @@ Phase 4: 06.07
 ## Deployment
 ### Images
 ```bash
-$ echo $envVariableZuToken | docker login ghcr.io -u blackrvn --password-stdin
+$ echo $GITHUB_TOKEN | docker login ghcr.io -u blackrvn --password-stdin
 $ cd ./Politgraph/
 $ docker buildx build --platform linux/arm64 -t ghcr.io/blackrvn/politgraph-ui:latest --push -f ./politgraph.ui/Dockerfile .
 $ docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/blackrvn/politgraph-update:latest . --push
@@ -52,27 +52,13 @@ Wird ein Dockerimage auf [GitHub](https://github.com/blackrvn?tab=packages&repo_
 
 ### Raspberry Pi Setup
 Um die Container auf dem Raspberry laufen zu lassen, müssen Umgebungsvariablen für die ConnectionStrings erstellt werden.
-Die Formate unterscheiden sich je nach Consumer:
-
-**Npgsql** (Blazor UI):
-```
-Host=192.168.0.19;Port=5431;Database=politgraph;Username=reader;Password=***
-```
-
-**psycopg** (Python Update):
-```
-host=192.168.0.19 port=5431 dbname=politgraph user=writer password=***
-```
-
 ```bash
 $ mkdir ./politgraph
 $ cd ./politgraph
 $ nano .env
-POLITGRAPH_DB_CONNECTION_READER=Host=...      # Npgsql Format
-POLITGRAPH_DB_CONNECTION_WRITER=host=...      # psycopg Format
 POSTGRES=***
-READER_PASSWORD=***                           # muss mit Passwort im READER Connection String übereinstimmen
-WRITER_PASSWORD=***                           # muss mit Passwort im WRITER Connection String übereinstimmen
+READER_PASSWORD=***
+WRITER_PASSWORD=***
 ```
 
 ### Datenbank-Initialisierung

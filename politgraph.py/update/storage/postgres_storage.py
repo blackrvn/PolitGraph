@@ -7,6 +7,7 @@ from typing import List, Tuple
 import numpy as np
 import psycopg
 from psycopg.rows import tuple_row
+from psycopg_pool import AsyncConnectionPool
 from tqdm.auto import tqdm
 
 from update.extract.dtos import AffairDTO, EdgeDTO, MemberDTO
@@ -17,21 +18,29 @@ logger = logging.getLogger(__name__)
 
 class SQLStorage:
     def __init__(self, *, connection_string: str, concurrency: int = 10):
-        self._connection_string = connection_string
         self._concurrency = concurrency
-
-    async def _connect(self) -> psycopg.AsyncConnection:
-        return await psycopg.AsyncConnection.connect(
-            self._connection_string, row_factory=tuple_row
+        self._pool = AsyncConnectionPool(
+            connection_string,
+            min_size=2,
+            max_size=concurrency,
+            kwargs={"row_factory": tuple_row},
+            open=False,
         )
 
+    async def __aenter__(self):
+        await self._pool.open()
+        return self
+
+    async def __aexit__(self, *_):
+        await self._pool.close()
+
     async def get_member(self, member_id: int):
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("SELECT * FROM member")
 
     async def is_member_inserted(self, *, member_id: int) -> bool:
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     "SELECT 1 FROM member WHERE member_id = %s", (member_id,)
@@ -39,7 +48,7 @@ class SQLStorage:
                 return await cur.fetchone() is not None
 
     async def is_affair_inserted(self, *, affair_id: int) -> bool:
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     "SELECT 1 FROM affair WHERE affair_id = %s", (affair_id,)
@@ -47,7 +56,7 @@ class SQLStorage:
                 return await cur.fetchone() is not None
 
     async def is_member_updated(self, *, member: MemberDTO) -> bool:
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     "SELECT updated_at FROM member WHERE member_id = %s",
@@ -57,7 +66,7 @@ class SQLStorage:
                 return row is not None and row[0] == member.updated_at
 
     async def is_affair_updated(self, *, affair: AffairDTO) -> bool:
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     "SELECT updated_at FROM affair WHERE affair_id = %s",
@@ -67,7 +76,7 @@ class SQLStorage:
                 return row is not None and row[0] == affair.updated_at
 
     async def add_vector(self, *, tfidf_vector: np.ndarray, w2v_vector: np.ndarray) -> int:
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
@@ -82,7 +91,7 @@ class SQLStorage:
                 return row[0]
 
     async def add_member(self, *, member: MemberDTO, vector_id: int):
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
@@ -102,7 +111,7 @@ class SQLStorage:
                 await conn.commit()
 
     async def add_edge(self, edge: EdgeDTO):
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
@@ -114,7 +123,7 @@ class SQLStorage:
                 await conn.commit()
 
     async def add_affair(self, *, member_id: int, affair: AffairDTO, vector_id: int):
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
@@ -132,7 +141,7 @@ class SQLStorage:
                 await conn.commit()
 
     async def update_member(self, member: MemberDTO):
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
@@ -162,7 +171,7 @@ class SQLStorage:
                 await conn.commit()
 
     async def update_affair(self, affair: AffairDTO):
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
@@ -185,14 +194,14 @@ class SQLStorage:
                 await conn.commit()
 
     async def delete_edges(self):
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("DELETE FROM edge")
                 await conn.commit()
                 logger.info("Deleted all existing edges")
 
     async def load_members_with_vectors(self) -> List[MemberDTO]:
-        async with await self._connect() as conn:
+        async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
