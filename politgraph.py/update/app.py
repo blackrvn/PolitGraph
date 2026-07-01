@@ -87,10 +87,6 @@ async def run_app(args: Any) -> None:
                 d2v_embedder = Doc2VecEmbedder(config=best_config)
                 d2v_embedder.embed_documents(docs=docs)
                 d2v_embedder.embed_members(members=members)
-                for _, doc in docs:
-                    doc.text_clean = None
-                    doc.lemmas = None
-                    doc.tagged_doc = None
 
                 if not evaluate:
                     quick_result = Doc2VecEvaluator.quick_evaluate(
@@ -98,6 +94,11 @@ async def run_app(args: Any) -> None:
                         docs=docs,
                     )
                     print(f"Doc2Vec: {quick_result}")
+
+                for _, doc in docs:
+                    doc.text_clean = None
+                    doc.lemmas = None
+                    doc.tagged_doc = None
 
                 pbar.update(1)
 
