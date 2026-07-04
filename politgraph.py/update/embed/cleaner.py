@@ -1,4 +1,5 @@
 ﻿import asyncio
+import sys
 from typing import Any, Dict, List, Tuple
 from tqdm.auto import tqdm
 from update.extract.dtos import MemberDTO, AffairDTO
@@ -19,9 +20,8 @@ class Cleaner:
             try:
                 text_clean = await self._clean(doc.text_raw)
                 lemmas = await self.lemmatize(text_clean)
-                doc.text_clean = text_clean
+                doc.text_raw = None
                 doc.tagged_doc = TaggedDocument(lemmas, [doc.id, member_id]) # d2v erwartet eine tag-liste
-                doc.lemmas = ' '.join(lemmas)
             finally:
                 sem.release()
                 async with lock:
@@ -39,7 +39,7 @@ class Cleaner:
         return soup.get_text(" ", strip=True)
     async def lemmatize(self, text: str) -> list[str]:
         doc = self._nlp(text)
-        return [t.lemma_ for t in doc if  
+        return [sys.intern(t.lemma_) for t in doc if  
             not t.is_space 
             and not t.is_stop 
             and not t.is_punct

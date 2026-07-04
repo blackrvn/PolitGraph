@@ -84,7 +84,10 @@ class SQLStorage:
                     VALUES (%s, %s)
                     RETURNING vector_id
                     """,
-                    (tfidf_vector.tobytes(), w2v_vector.tobytes()),
+                    (
+                        tfidf_vector.tobytes() if tfidf_vector is not None else None,
+                        w2v_vector.tobytes() if w2v_vector is not None else None,
+                    ),
                 )
                 row = await cur.fetchone()
                 await conn.commit()
@@ -166,7 +169,11 @@ class SQLStorage:
                     WHERE m.vector_id = vector.vector_id
                       AND m.member_id = %s
                     """,
-                    (member.tfidf_vector.tobytes(), None, member.id),
+                    (
+                        member.tfidf_vector.tobytes() if member.tfidf_vector is not None else None,
+                        member.w2v_vector.tobytes() if member.w2v_vector is not None else None,
+                        member.id,
+                    ),
                 )
                 await conn.commit()
 
@@ -189,7 +196,11 @@ class SQLStorage:
                     WHERE a.vector_id = vector.vector_id
                       AND a.affair_id = %s
                     """,
-                    (affair.tfidf_vector.tobytes(), None, affair.id),
+                    (
+                        affair.tfidf_vector.tobytes() if affair.tfidf_vector is not None else None,
+                        affair.w2v_vector.tobytes() if affair.w2v_vector is not None else None,
+                        affair.id,
+                    ),
                 )
                 await conn.commit()
 
