@@ -31,6 +31,13 @@ logger = logging.getLogger(__name__)
 
 async def run_app(args: Any) -> None:
     nlp = spacy.load("de_core_news_sm", disable=["tagger", "parser", "ner", "textcat"])
+    # Der deutsche Lemmatizer ist lookup-basiert und braucht weder POS noch Embeddings.
+    # tok2vec/morphologizer/attribute_ruler nur deaktivieren, wenn das wirklich zutrifft.
+    if "lemmatizer" in nlp.pipe_names and getattr(nlp.get_pipe("lemmatizer"), "mode", "") == "lookup":
+        for pipe_name in ("tok2vec", "morphologizer", "attribute_ruler"):
+            if pipe_name in nlp.pipe_names:
+                nlp.disable_pipe(pipe_name)
+    logger.info(f"spaCy pipes active: {nlp.pipe_names}")
     http = HttpClient(base_url='https://api.openparldata.ch/v1/', timeout_seconds=10)
     api = ParliamentApi(http=http)
     project_root = Path(__file__).parent.parent.parent.resolve()
@@ -68,7 +75,7 @@ async def run_app(args: Any) -> None:
                 print("Everything updated")
                 pbar.close()
             else:
-                await cleaner.clean_documents(docs=docs, concurrency=int(args.concurrency))
+                cleaner.clean_documents(docs=docs)
                 pbar.update(1)
 
                 if evaluate:
