@@ -154,19 +154,33 @@ class Doc2VecEvaluator:
         )
 
         train_vectors = np.array([model.dv[doc.id] for (_, doc) in train_docs])
+
+        # tagged_doc kann durch die Memory-Cleanup-Schritte bereits None sein;
+        # solche Test-Dokumente lassen sich nicht mehr per infer_vector bewerten
+        # und werden übersprungen.
+        eval_pairs = [
+            (doc, label)
+            for (_, doc), label in zip(test_docs, test_labels)
+            if doc.tagged_doc is not None
+        ]
+        skipped = len(test_docs) - len(eval_pairs)
+        if skipped:
+            logger.warning(f"quick_evaluate: {skipped} Test-Dokumente ohne tagged_doc übersprungen")
+
         test_vectors = np.array([
             model.infer_vector(doc.tagged_doc.words, epochs=infer_epochs)
-            for (_, doc) in test_docs
+            for (doc, _) in eval_pairs
         ])
+        eval_labels = [label for (_, label) in eval_pairs]
 
         clf = KNeighborsClassifier(n_neighbors=k_neighbors, metric="cosine")
         clf.fit(train_vectors, train_labels)
-        accuracy = clf.score(test_vectors, test_labels)
+        accuracy = clf.score(test_vectors, eval_labels)
 
         result = QuickEvalResult(
             accuracy=accuracy,
             num_classes=len(set(labels)),
-            num_samples=len(test_docs),
+            num_samples=len(eval_pairs),
         )
 
         logger.info(f"  {result}")
