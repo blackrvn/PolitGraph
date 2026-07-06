@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+﻿# syntax=docker/dockerfile:1
 
 # Comments are provided throughout this file to help you get started.
 # If you need more help, visit the Dockerfile reference guide at
@@ -42,6 +42,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 RUN python -m spacy download de_core_news_sm
 
+ENV POLITGRAPH_CHECKPOINT_DIR=/checkpoints
+RUN mkdir -p /checkpoints && chown appuser /checkpoints
 
 # Switch to the non-privileged user to run the application.
 USER appuser

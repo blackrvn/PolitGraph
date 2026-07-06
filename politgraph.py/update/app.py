@@ -8,6 +8,7 @@ from update.api.http_client import HttpClient
 from update.api.parliament_api import ParliamentApi
 from update.graph.builder import EdgeBuilder
 from update.pipeline.updater import Updater
+from update.pipeline.checkpoint import CheckpointStore, STAGES
 from update.storage.postgres_storage import SQLStorage
 from update.embed.cleaner import Cleaner
 from update.embed.embedder import TfIdfEmbedder, Doc2VecEmbedder, Doc2VecConfig
@@ -62,22 +63,41 @@ async def run_app(args: Any) -> None:
                 await storage.save_edges(edges)
                 return
 
+            checkpoints = CheckpointStore(
+                directory=None if args.no_checkpoint else Path(args.checkpoint_dir),
+                run_key=f"offset={args.offset}|active={args.active}",
+            )
+            resume_idx = checkpoints.latest_completed_index()
+
             pbar = tqdm(total=5, desc="Update", unit="tasks")
 
-            docs, members = await updater.fetch_documents(
-                concurrency=int(args.concurrency),
-                offset=args.offset,
-                active=args.active,
-            )
-            pbar.update(1)
-
-            if len(docs) == 0:
-                logger.info("Everything up to date, nothing to fetch")
-                pbar.close()
+            # --- Stage 0: fetch (STAGES[0] == "fetched") ---
+            if resume_idx >= 0:
+                docs, members = checkpoints.load(STAGES[resume_idx])
+                logger.info(f"Resuming pipeline after '{STAGES[resume_idx]}' stage")
+                pbar.update(resume_idx + 1)  # abgeschlossene Stages auf dem Balken überspringen
             else:
-                cleaner.clean_documents(docs=docs)
+                docs, members = await updater.fetch_documents(
+                    concurrency=int(args.concurrency),
+                    offset=args.offset,
+                    active=args.active,
+                )
+                if len(docs) == 0:
+                    logger.info("Everything up to date, nothing to fetch")
+                    pbar.close()
+                    checkpoints.clear()
+                    return
+                checkpoints.save("fetched", (docs, members))
                 pbar.update(1)
 
+            # --- Stage 1: clean (STAGES[1] == "cleaned") ---
+            if resume_idx < 1:
+                cleaner.clean_documents(docs=docs)
+                checkpoints.save("cleaned", (docs, members))
+                pbar.update(1)
+
+            # --- Stage 2: embed (STAGES[2] == "embedded") ---
+            if resume_idx < 2:
                 if evaluate:
                     evaluator = Doc2VecEvaluator(docs=docs)
                     results = evaluator.run()
@@ -103,14 +123,19 @@ async def run_app(args: Any) -> None:
                 for _, doc in docs:
                     doc.tagged_doc = None
 
+                checkpoints.save("embedded", (docs, members))
                 pbar.update(1)
 
-                edges = edge_builder.calculate_neighbors_d2v(members=members)
-                pbar.update(1)
+            # --- Edges + Persistenz (günstig / idempotent, kein Checkpoint) ---
+            edges = edge_builder.calculate_neighbors_d2v(members=members)
+            pbar.update(1)
 
-                await storage.save_members(members)
-                await storage.save_affairs(docs)
-                await storage.save_edges(edges)
-                pbar.update(1)
+            await storage.save_members(members)
+            await storage.save_affairs(docs)
+            await storage.save_edges(edges)
+            pbar.update(1)
+            pbar.close()
+
+            checkpoints.clear()
     finally:
         await http.aclose()

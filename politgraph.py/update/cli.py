@@ -1,5 +1,6 @@
 ﻿import argparse
 import asyncio
+import os
 import sys
 import selectors
 from update.app import run_app
@@ -49,6 +50,19 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=5,
         help="Anzahl Nachbarn pro Member (default: 5)"
+    )
+    p.add_argument(
+        "--checkpoint-dir",
+        type=str,
+        default=os.environ.get("POLITGRAPH_CHECKPOINT_DIR", "checkpoints"),
+        help="Verzeichnis für Pipeline-Checkpoints; ein Rerun nach Absturz "
+             "setzt an der letzten abgeschlossenen Stage fort "
+             "(default: env POLITGRAPH_CHECKPOINT_DIR oder ./checkpoints)"
+    )
+    p.add_argument(
+        "--no-checkpoint",
+        action="store_true",
+        help="Deaktiviert Checkpointing (kein Resume nach Absturz)"
     )
 
     return p

@@ -30,12 +30,18 @@ services:
 
   update:
     image: ghcr.io/blackrvn/politgraph-update:latest
+    build:
+      context: ./politgraph.py
     container_name: politgraph-update
     environment:
       - POLITGRAPH_DB_CONNECTION_WRITER=host=politgraph-db port=5432 dbname=politgraph user=writer password=${WRITER_PASSWORD}
+      - POLITGRAPH_CHECKPOINT_DIR=/checkpoints
+    volumes:
+      - checkpoints:/checkpoints
     depends_on:
       - politgraph-db
     profiles: [update]
 
 volumes:
   pgdata:
+  checkpoints:
