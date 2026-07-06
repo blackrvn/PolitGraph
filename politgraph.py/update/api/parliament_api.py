@@ -1,8 +1,11 @@
-﻿from typing import Any, Dict, List, Optional, Set
+﻿import logging
+from typing import Any, Dict, List, Optional, Set
 
 import httpx
 
 from update.api.http_client import HttpClient
+
+logger = logging.getLogger(__name__)
 
 
 class ParliamentApi:
@@ -20,7 +23,8 @@ class ParliamentApi:
 
         try:
             status, container = await self.http.get_json(entry_node)
-        except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError):
+        except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError) as e:
+            logger.warning(f"Failed to fetch '{entry_node}': {e!r}")
             return ids
 
         if container is None:
@@ -40,7 +44,8 @@ class ParliamentApi:
 
             try:
                 status, container = await self.http.get_json(next_page)
-            except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError):
+            except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError) as e:
+                logger.warning(f"Failed to fetch page '{next_page}': {e!r}")
                 break
 
             if container is None:
@@ -74,7 +79,8 @@ class ParliamentApi:
                     "lang_format":"flat"
                 }
             )
-        except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError):
+        except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError) as e:
+            logger.warning(f"Failed to fetch member {member_id}: {e!r}")
             return None
         return data
 
@@ -95,6 +101,7 @@ class ParliamentApi:
                     "lang_format":"flat"
                 },
             )
-        except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError):
+        except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError) as e:
+            logger.warning(f"Failed to fetch affair {affair_id}: {e!r}")
             return None
         return data

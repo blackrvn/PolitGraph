@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, List, Tuple, Optional
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import normalize
@@ -8,7 +9,24 @@ from update.extract.dtos import MemberDTO, AffairDTO
 from update.embed.evaluator import Doc2VecConfig
 
 from gensim.models.doc2vec import Doc2Vec
+from gensim.models.callbacks import CallbackAny2Vec
+from tqdm.auto import tqdm
 import numpy as np
+
+logger = logging.getLogger(__name__)
+
+
+class _EpochProgress(CallbackAny2Vec):
+    """tqdm-Fortschrittsbalken über die Trainings-Epochen von Doc2Vec."""
+
+    def __init__(self, epochs: int, desc: str = "  Training Doc2Vec"):
+        self._pbar = tqdm(total=epochs, desc=desc, unit="epoch", leave=False)
+
+    def on_epoch_end(self, model: Doc2Vec) -> None:
+        self._pbar.update(1)
+
+    def on_train_end(self, model: Doc2Vec) -> None:
+        self._pbar.close()
 
 class TfIdfEmbedder:
 
@@ -43,18 +61,41 @@ class Doc2VecEmbedder:
         self.workers = workers
 
     def embed_documents(self, docs: List[Tuple[MemberDTO, AffairDTO]]):
+        phases = tqdm(total=3, desc="Embedding", unit="phase", leave=False)
+
+        phases.set_postfix_str("building vocab")
         corpus = [doc.tagged_doc for (_, doc) in docs]
         self.model = Doc2Vec(**self.config.to_dict(), workers=self.workers)
         self.model.build_vocab(corpus)
-        self.model.train(corpus, total_examples=self.model.corpus_count, epochs=self.model.epochs)
-        for (_, doc) in docs:
+        logger.info(
+            f"Doc2Vec vocab built: {len(corpus)} documents, "
+            f"{len(self.model.wv)} terms ({self.config})"
+        )
+        phases.update(1)
+
+        phases.set_postfix_str(f"training ({self.model.epochs} epochs)")
+        self.model.train(
+            corpus,
+            total_examples=self.model.corpus_count,
+            epochs=self.model.epochs,
+            callbacks=[_EpochProgress(self.model.epochs)],
+        )
+        phases.update(1)
+
+        phases.set_postfix_str("assigning doc vectors")
+        for (_, doc) in tqdm(docs, desc="  Doc vectors", unit="doc", leave=False):
             doc.w2v_vector = self.model.dv[doc.id]
+        phases.update(1)
+
+        phases.close()
+        logger.info(f"Embedded {len(docs)} documents")
 
     def embed_members(self, members: List[MemberDTO]):
-        for member in members:
+        for member in tqdm(members, desc="  Member vectors", unit="member", leave=False):
             member.w2v_vector = normalize(
                 self.model.dv[member.id].reshape(1, -1)
             )
+        logger.info(f"Embedded {len(members)} members")
 
 
 

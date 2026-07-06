@@ -245,6 +245,7 @@ class SQLStorage:
         sem = asyncio.Semaphore(self._concurrency)
         lock = asyncio.Lock()
         pbar = tqdm(total=len(members), desc="Saving members", unit="member")
+        stats = {"new": 0, "updated": 0, "failed": 0}
 
         async def worker(member: MemberDTO) -> None:
             async with sem:
@@ -255,23 +256,30 @@ class SQLStorage:
                             w2v_vector=member.w2v_vector,
                         )
                         await self.add_member(member=member, vector_id=v_id)
+                        stats["new"] += 1
                     elif not await self.is_member_updated(member=member):
                         await self.update_member(member=member)
+                        stats["updated"] += 1
                 except psycopg.errors.UniqueViolation:
-                    print(f"[{member.id}] could not save member")
+                    stats["failed"] += 1
+                    logger.debug(f"[{member.id}] could not save member")
                 finally:
                     async with lock:
                         pbar.update(1)
+                        pbar.set_postfix(new=stats["new"], updated=stats["updated"], failed=stats["failed"], refresh=False)
 
         try:
             await asyncio.gather(*(worker(member) for member in members))
         finally:
             pbar.close()
 
+        logger.info(f"Saved members: {stats['new']} new, {stats['updated']} updated, {stats['failed']} failed")
+
     async def save_affairs(self, docs: List[Tuple[MemberDTO, AffairDTO]]):
         sem = asyncio.Semaphore(self._concurrency)
         lock = asyncio.Lock()
         pbar = tqdm(total=len(docs), desc="Saving affairs", unit="affair")
+        stats = {"new": 0, "updated": 0, "failed": 0}
 
         async def worker(member: MemberDTO, affair: AffairDTO) -> None:
             async with sem:
@@ -282,35 +290,47 @@ class SQLStorage:
                             w2v_vector=affair.w2v_vector,
                         )
                         await self.add_affair(member_id=member.id, affair=affair, vector_id=v_id)
+                        stats["new"] += 1
                     elif not await self.is_affair_updated(affair=affair):
                         await self.update_affair(affair=affair)
+                        stats["updated"] += 1
                 except psycopg.errors.UniqueViolation:
-                    print(f"[{affair.id}] could not save affair")
+                    stats["failed"] += 1
+                    logger.debug(f"[{affair.id}] could not save affair")
                 finally:
                     async with lock:
                         pbar.update(1)
+                        pbar.set_postfix(new=stats["new"], updated=stats["updated"], failed=stats["failed"], refresh=False)
 
         try:
             await asyncio.gather(*(worker(member, affair) for (member, affair) in docs))
         finally:
             pbar.close()
 
+        logger.info(f"Saved affairs: {stats['new']} new, {stats['updated']} updated, {stats['failed']} failed")
+
     async def save_edges(self, edges: List[EdgeDTO]):
         sem = asyncio.Semaphore(self._concurrency)
         lock = asyncio.Lock()
         pbar = tqdm(total=len(edges), desc="Saving edges", unit="edge")
+        stats = {"saved": 0, "failed": 0}
 
         async def worker(edge: EdgeDTO) -> None:
             async with sem:
                 try:
                     await self.add_edge(edge=edge)
+                    stats["saved"] += 1
                 except psycopg.errors.UniqueViolation:
-                    print(f"[{edge.id}] could not save edge")
+                    stats["failed"] += 1
+                    logger.debug(f"[{edge.member_source}->{edge.member_target}] could not save edge")
                 finally:
                     async with lock:
                         pbar.update(1)
+                        pbar.set_postfix(saved=stats["saved"], failed=stats["failed"], refresh=False)
 
         try:
             await asyncio.gather(*(worker(edge) for edge in edges))
         finally:
             pbar.close()
+
+        logger.info(f"Saved edges: {stats['saved']} saved, {stats['failed']} failed")

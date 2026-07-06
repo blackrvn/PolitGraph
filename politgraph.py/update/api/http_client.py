@@ -1,6 +1,9 @@
+import logging
 from typing import Any, Dict, Optional, Tuple
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 class HttpClient:
@@ -30,9 +33,11 @@ class HttpClient:
         r = await self._client.get(path_or_url, params=params)
 
         if not r.is_success:
+            logger.debug(f"GET {path_or_url} -> HTTP {r.status_code}")
             return r.status_code, None
 
         try:
             return r.status_code, r.json()
         except ValueError:
+            logger.warning(f"GET {path_or_url} -> HTTP {r.status_code} with non-JSON body")
             return r.status_code, None

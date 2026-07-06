@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import List, Tuple
 from tqdm.auto import tqdm
@@ -6,11 +7,16 @@ from bs4 import BeautifulSoup
 import html as ihtml
 from spacy import language
 from gensim.models.doc2vec import TaggedDocument
+
+logger = logging.getLogger(__name__)
+
+
 class Cleaner:
     def __init__(self, *, nlp:language):
         self._nlp = nlp
     def clean_documents(self, *, docs: List[Tuple[MemberDTO, AffairDTO]], batch_size: int = 1000, pipe_batch_size: int = 64) -> None:
         pbar = tqdm(total=len(docs), desc="Cleaning documents", unit="document")
+        empty = 0
         try:
             for start in range(0, len(docs), batch_size):
                 batch = docs[start:start + batch_size]
@@ -30,13 +36,16 @@ class Cleaner:
                             and not t.like_url
                             and not t.like_email
                         ]
+                        if not lemmas:
+                            empty += 1
                         doc.tagged_doc = TaggedDocument(lemmas, [doc.id, member.id]) # d2v erwartet eine tag-liste
                         doc.text_raw = None
                         pbar.update(1)
                 texts = None
-                pbar.set_postfix(strings=len(self._nlp.vocab.strings))
+                pbar.set_postfix(strings=len(self._nlp.vocab.strings), empty=empty, refresh=False)
         finally:
             pbar.close()
+        logger.info(f"Cleaned {len(docs)} documents ({empty} produced no lemmas)")
 
     def _strip_html(self, text: str) -> str:
         text = ihtml.unescape(text)

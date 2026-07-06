@@ -72,7 +72,7 @@ async def run_app(args: Any) -> None:
             pbar.update(1)
 
             if len(docs) == 0:
-                print("Everything updated")
+                logger.info("Everything up to date, nothing to fetch")
                 pbar.close()
             else:
                 cleaner.clean_documents(docs=docs)
@@ -82,7 +82,7 @@ async def run_app(args: Any) -> None:
                     evaluator = Doc2VecEvaluator(docs=docs)
                     results = evaluator.run()
                     best_config = evaluator.best.config
-                    print(f"Beste Doc2Vec-Config: {evaluator.best}")
+                    logger.info(f"Beste Doc2Vec-Config: {evaluator.best}")
                 else:
                     best_config = Doc2VecConfig()
 
@@ -98,7 +98,7 @@ async def run_app(args: Any) -> None:
                         model=d2v_embedder.model,
                         docs=docs,
                     )
-                    print(f"Doc2Vec: {quick_result}")
+                    logger.info(f"Doc2Vec: {quick_result}")
 
                 for _, doc in docs:
                     doc.tagged_doc = None

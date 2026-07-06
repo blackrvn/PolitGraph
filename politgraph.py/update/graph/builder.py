@@ -1,4 +1,5 @@
-﻿from typing import List
+﻿import logging
+from typing import List
 
 from scipy.sparse import vstack
 
@@ -7,6 +8,9 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from numpy.linalg import norm
+
+logger = logging.getLogger(__name__)
+
 
 class EdgeBuilder:
     def __init__(self, *, 
@@ -41,6 +45,10 @@ class EdgeBuilder:
                     edge = EdgeDTO(source_member.id, target_member.id, sim)
                     edges.append(edge)
 
+        logger.info(
+            f"Built {len(edges)} tfidf edges from {len(members)} members "
+            f"(k={self._neighbors}, threshold={self._threshold})"
+        )
         return edges
 
     def calculate_neighbors_d2v(self, *, members: List[MemberDTO]) -> List[EdgeDTO]:
@@ -65,8 +73,12 @@ class EdgeBuilder:
                     edge = EdgeDTO(source_member.id, target_member.id, sim)
                     edges.append(edge)
 
+        logger.info(
+            f"Built {len(edges)} d2v edges from {len(members)} members "
+            f"(k={self._neighbors}, threshold={self._threshold})"
+        )
         return edges
-        
+
 
 
 
