@@ -113,6 +113,13 @@ async def run_app(args: Any) -> None:
                 d2v_embedder.embed_documents(docs=docs)
                 d2v_embedder.embed_members(members=members)
 
+                # Checkpoint direkt nach dem (teuren) Training speichern, damit ein
+                # Fehler in der anschließenden Evaluation kein erneutes Training
+                # erzwingt. tagged_doc wird hier bewusst noch nicht genullt, da
+                # quick_evaluate es zum Inferieren der Test-Vektoren braucht.
+                checkpoints.save("embedded", (docs, members))
+                pbar.update(1)
+
                 if not evaluate:
                     quick_result = Doc2VecEvaluator.quick_evaluate(
                         model=d2v_embedder.model,
@@ -122,9 +129,6 @@ async def run_app(args: Any) -> None:
 
                 for _, doc in docs:
                     doc.tagged_doc = None
-
-                checkpoints.save("embedded", (docs, members))
-                pbar.update(1)
 
             # --- Edges + Persistenz (günstig / idempotent, kein Checkpoint) ---
             edges = edge_builder.calculate_neighbors_d2v(members=members)
