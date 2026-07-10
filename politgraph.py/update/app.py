@@ -16,12 +16,24 @@ from update.embed.evaluator import Doc2VecEvaluator
 
 import logging
 
+_log_handlers = [
+    logging.StreamHandler(open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False)),
+]
+
+# Optional: zusätzlich in eine Datei loggen. Der Pfad sollte auf einem
+# gemounteten Volume liegen, damit die Logs auch bei `docker run --rm`
+# nach dem Entfernen des Containers erhalten bleiben. tqdm-Fortschritts-
+# balken landen nicht hier (die schreiben nach stderr), die Datei enthält
+# also nur saubere Log-Zeilen.
+_log_file = os.environ.get("POLITGRAPH_LOG_FILE")
+if _log_file:
+    Path(_log_file).parent.mkdir(parents=True, exist_ok=True)
+    _log_handlers.append(logging.FileHandler(_log_file, mode="a", encoding="utf-8"))
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
-    handlers=[
-        logging.StreamHandler(open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False)),
-    ],
+    handlers=_log_handlers,
 )
 
 logging.getLogger("httpcore").setLevel(logging.WARNING)

@@ -36,8 +36,10 @@ services:
     environment:
       - POLITGRAPH_DB_CONNECTION_WRITER=host=politgraph-db port=5432 dbname=politgraph user=writer password=${WRITER_PASSWORD}
       - POLITGRAPH_CHECKPOINT_DIR=/checkpoints
+      - POLITGRAPH_LOG_FILE=/logs/update.log
     volumes:
       - checkpoints:/checkpoints
+      - ./logs:/logs
     depends_on:
       - politgraph-db
     profiles: [update]
