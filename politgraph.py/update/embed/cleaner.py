@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from tqdm.auto import tqdm
 from update.extract.dtos import MemberDTO, AffairDTO
 from bs4 import BeautifulSoup
@@ -47,7 +47,9 @@ class Cleaner:
             pbar.close()
         logger.info(f"Cleaned {len(docs)} documents ({empty} produced no lemmas)")
 
-    def _strip_html(self, text: str) -> str:
+    def _strip_html(self, text: Optional[str]) -> str:
+        if not text:
+            return ""
         text = ihtml.unescape(text)
         soup = BeautifulSoup(text, "html.parser")
         text = soup.get_text(" ", strip=True)
