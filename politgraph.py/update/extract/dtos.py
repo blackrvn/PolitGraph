@@ -29,8 +29,12 @@ class AffairDTO:
             tagged_doc=None,
             tfidf_vector=None,
             w2v_vector=None,
-            _raw=data,
+            _raw=data,  
         )
+
+    def is_valid(self) -> bool:
+        return self.id is not None and self.title is not None and self.title != "" and self.updated_at != "" and self.updated_at is not None
+              
 
     def __hash__(self):
         return hash(self.id)

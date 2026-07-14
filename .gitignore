@@ -365,3 +365,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 *.db
+/politgraph.ui/appsettings.json
+
+#Python Env
+env/

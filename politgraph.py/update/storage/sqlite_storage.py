@@ -225,7 +225,7 @@ class SQLStorage:
                 elif not await self.is_member_updated(member=member):
                     await self.update_member(member=member)
             except (sqlite3.IntegrityError):
-                print(f"[{member.id}] could not save member")
+                logger.debug(f"[{member.id}] could not save member")
             finally:
                 sem.release()
                 async with lock:
@@ -252,7 +252,7 @@ class SQLStorage:
                 elif not await self.is_affair_updated(affair=affair):
                     await self.update_affair(affair=affair)
             except (sqlite3.IntegrityError):
-                print(f"[{affair.id}] could not save affair")
+                logger.debug(f"[{affair.id}] could not save affair")
             finally:
                 sem.release()
                 async with lock:
@@ -275,7 +275,7 @@ class SQLStorage:
             try:
                 await self.add_edge(edge=edge)
             except (sqlite3.IntegrityError):
-                print(f"[{edge.id}] could not save edge")
+                logger.debug(f"[{edge.member_source}->{edge.member_target}] could not save edge")
             finally:
                 sem.release()
                 async with lock:

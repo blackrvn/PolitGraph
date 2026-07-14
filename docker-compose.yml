@@ -1,0 +1,49 @@
+services:
+  politgraph-ui:
+    image: ghcr.io/blackrvn/politgraph-ui:latest
+    container_name: politgraph-ui
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Read=Host=politgraph-db;Port=5432;Database=politgraph;Username=reader;Password=${READER_PASSWORD}
+      - ConnectionStrings__Write=Host=politgraph-db;Port=5432;Database=politgraph;Username=writer;Password=${WRITER_PASSWORD}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - politgraph-db
+
+  politgraph-db:
+    image: postgres:18
+    container_name: politgraph-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES}
+      POSTGRES_DB: politgraph
+      READER_PASSWORD: ${READER_PASSWORD}
+      WRITER_PASSWORD: ${WRITER_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./init.sh:/docker-entrypoint-initdb.d/init.sh
+    ports:
+      - "5431:5432"
+    restart: unless-stopped
+
+  update:
+    image: ghcr.io/blackrvn/politgraph-update:latest
+    build:
+      context: ./politgraph.py
+    container_name: politgraph-update
+    environment:
+      - POLITGRAPH_DB_CONNECTION_WRITER=host=politgraph-db port=5432 dbname=politgraph user=writer password=${WRITER_PASSWORD}
+      - POLITGRAPH_CHECKPOINT_DIR=/checkpoints
+      - POLITGRAPH_LOG_FILE=/logs/update.log
+    volumes:
+      - checkpoints:/checkpoints
+      - ./logs:/logs
+    depends_on:
+      - politgraph-db
+    profiles: [update]
+
+volumes:
+  pgdata:
+  checkpoints:

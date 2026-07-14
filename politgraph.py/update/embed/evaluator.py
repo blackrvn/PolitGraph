@@ -1,4 +1,5 @@
-﻿from dataclasses import dataclass
+﻿from collections import Counter
+from dataclasses import dataclass
 from typing import List, Tuple, Optional
 from update.extract.dtos import MemberDTO, AffairDTO
 import numpy as np
@@ -70,6 +71,43 @@ class QuickEvalResult:
         )
 
 
+def _labeled_split(
+    docs: List[Tuple[MemberDTO, AffairDTO]],
+    *,
+    test_size: float,
+    random_state: int,
+):
+    """Train/Test-Split für die Partei-Klassifikation.
+
+    Mitglieder ohne Partei sind gültig und bleiben im übrigen Pipeline-Flow
+    (Embedding, Kanten, Persistenz) erhalten. Als Klassifikations-Label
+    lassen sie sich aber nicht verwenden, daher werden sie nur hier – bei der
+    Evaluation – ignoriert.
+
+    Falls eine Partei zu wenige Dokumente für eine stratifizierte Aufteilung
+    hat, wird ohne Stratifizierung aufgeteilt statt eine Ausnahme zu werfen.
+    """
+    labeled = [(m, d) for (m, d) in docs if m.party is not None]
+    labels = [member.party for (member, _) in labeled]
+
+    unlabeled = len(docs) - len(labeled)
+    if unlabeled:
+        logger.info(f"{unlabeled} Dokumente ohne Partei-Label werden bei der Evaluation ignoriert")
+
+    counts = Counter(labels)
+    stratify = labels if counts and min(counts.values()) >= 2 else None
+    if labels and stratify is None:
+        logger.warning("Stratifizierung deaktiviert: mindestens eine Partei hat nur ein Dokument")
+
+    train_docs, test_docs, train_labels, test_labels = train_test_split(
+        labeled, labels,
+        test_size=test_size,
+        random_state=random_state,
+        stratify=stratify,
+    )
+    return train_docs, test_docs, train_labels, test_labels, labels
+
+
 class Doc2VecEvaluator:
     """
     Evaluiert verschiedene Doc2Vec-Konfigurationen auf einem Korpus
@@ -98,13 +136,10 @@ class Doc2VecEvaluator:
         self.results: List[EvalResult] = []
 
     def run(self) -> List[EvalResult]:
-        labels = [member.party for (member, _) in self.docs]
-
-        train_docs, test_docs, train_labels, test_labels = train_test_split(
-            self.docs, labels,
+        train_docs, test_docs, train_labels, test_labels, _ = _labeled_split(
+            self.docs,
             test_size=self.test_size,
             random_state=self.random_state,
-            stratify=labels,
         )
 
         train_corpus = [doc.tagged_doc for (_, doc) in train_docs]
@@ -144,29 +179,44 @@ class Doc2VecEvaluator:
         Wird immer ausgeführt (auch ohne --evaluate) um eine kurze
         Zusammenfassung der Modellqualität zu liefern.
         """
-        labels = [member.party for (member, _) in docs]
+        if len({m.party for (m, _) in docs if m.party is not None}) < 2:
+            logger.warning("quick_evaluate: zu wenige Parteien mit Label, Evaluation übersprungen")
+            return QuickEvalResult(accuracy=float("nan"), num_classes=0, num_samples=0)
 
-        train_docs, test_docs, train_labels, test_labels = train_test_split(
-            docs, labels,
+        train_docs, test_docs, train_labels, test_labels, labels = _labeled_split(
+            docs,
             test_size=test_size,
             random_state=random_state,
-            stratify=labels,
         )
 
         train_vectors = np.array([model.dv[doc.id] for (_, doc) in train_docs])
+
+        # tagged_doc kann durch die Memory-Cleanup-Schritte bereits None sein;
+        # solche Test-Dokumente lassen sich nicht mehr per infer_vector bewerten
+        # und werden übersprungen.
+        eval_pairs = [
+            (doc, label)
+            for (_, doc), label in zip(test_docs, test_labels)
+            if doc.tagged_doc is not None
+        ]
+        skipped = len(test_docs) - len(eval_pairs)
+        if skipped:
+            logger.warning(f"quick_evaluate: {skipped} Test-Dokumente ohne tagged_doc übersprungen")
+
         test_vectors = np.array([
             model.infer_vector(doc.tagged_doc.words, epochs=infer_epochs)
-            for (_, doc) in test_docs
+            for (doc, _) in eval_pairs
         ])
+        eval_labels = [label for (_, label) in eval_pairs]
 
         clf = KNeighborsClassifier(n_neighbors=k_neighbors, metric="cosine")
         clf.fit(train_vectors, train_labels)
-        accuracy = clf.score(test_vectors, test_labels)
+        accuracy = clf.score(test_vectors, eval_labels)
 
         result = QuickEvalResult(
             accuracy=accuracy,
             num_classes=len(set(labels)),
-            num_samples=len(test_docs),
+            num_samples=len(eval_pairs),
         )
 
         logger.info(f"  {result}")

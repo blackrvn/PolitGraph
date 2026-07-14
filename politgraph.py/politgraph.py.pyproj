@@ -54,6 +54,7 @@
     <Compile Include="update\pipeline\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="update\storage\postgres_storage.py" />
     <Compile Include="update\storage\__init__.py">
       <SubType>Code</SubType>
     </Compile>
@@ -77,7 +78,10 @@
     </Interpreter>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="crontab" />
+    <Content Include="Dockerfile" />
     <Content Include="readme.md" />
+    <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="update\common\" />
