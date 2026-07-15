@@ -1,4 +1,4 @@
-using politgraph.lib.Data;
+﻿using politgraph.lib.Data;
 using politgraph.lib.DataAccess;
 using politgraph.lib.Interfaces;
 using politgraph.ui;
@@ -6,7 +6,7 @@ using politgraph.ui.Components;
 using politgraph.ui.Components.Layout;
 
 
-// Erm�glicht das abgeleichen von DB-Columns zu .net Models.
+// Ermöglicht das abgeleichen von DB-Columns zu .net Models.
 // DB: first_name | Model: FirstName
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
@@ -17,8 +17,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
-builder.Services.AddSingleton<IFilterService, FilterService>();
-builder.Services.AddSingleton<ISelectionService, SelectionService>();
+builder.Services.AddScoped<IFilterService, FilterService>();
+builder.Services.AddScoped<ISelectionService, SelectionService>();
 builder.Services.AddTransient<IMembersData, MembersData>();
 builder.Services.AddTransient<IAffairsData, AffairsData>();
 builder.Services.AddTransient<AffairsData>();
