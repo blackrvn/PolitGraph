@@ -3,59 +3,17 @@
 ## Beschrieb
 Diese Anwendung visualisiert die Ähnlichkeiten zwischen den Parlamentarier:innen des Schweizer Parlamentes. Dadurch sollen Gruppierungen und Verbindungen modelliert und dargestellt werden können.
 ## Methodik
-Es werden die Texte (//TODO: Welche Texte genau ?) über die API abgerufen, lemmatisiert und anschliessend mit einem TF-IDF Algorithmus verarbeitet.
+Es werden alle deutschen Geschäftstexte über die API abgerufen, lemmatisiert und anschliessend mit einem Doc2Vec Modell vektorisiert.
 Die dadurch entstehenden Vektoren werden verwendet, um die Ähnlichkeit (Cosinus-Ähnlichkeit) zu bestimmen.
-Da die Datengewinnung aufwändig ist, werden die wichtigsten Daten zusammen mit den Vektoren und Ähnlichkeiten lokal in einer (Graph?-)DB abgespeichert.
-## Aufbau
-### Phase 1 
-In der ersten Phase wird die Anwendung stark reduziert und besteht nur aus folgenden Elementen:
-- ParliamentServiceClient (kommuniziert mit der API)
-- SimilarityService (Berechnet TF-IDF sowie die Ähnlichkeiten)
-- Program (Einstiegspunkt für die CLI und gibt nur die berechnete Ähnlichkeit wieder)
-- Diverse DTO's
-
-Hierbei wird bewusst auf eine graphische Darstellung, das Speichern sowie das Säubern verzichtet.
-
-#### Usage
-``` bash
-politgraph <name 1> <name 2>
-```
-```bash
-politgraph "Cyrill Aellen" "Pascal Broulis"
-```
-### Phase 2
-In dieser Phase werden folgende Services ergänzt:
-- DBService (Zuständig für das Speichern und Bereitstellen der Ähnlichkeiten)
-
-Die bereits berechneten Ähnlichkeiten werden in der DB gespeichert zwecks schnellerem Abrufen. In dieser Phase ist dies zwar noch nicht essenziell, da der CLI-Command immer noch nur zwei Namen als Argumen aktzeptiert, jedoch ist dies ein wichtiger Schritt für spätere Phasen.
-Die DB kann über einen Command aktiv aktualisiert werden.
-### Phase 3 
-In dieser Phase wird eine graphische Oberfläche erstellt, die das Berechnete Netzwerk als Graph darstellt und gewisse Filter zulässt.
-### Phase 4 
-Hier wird ein Wizard zur Installation zur Verfügung gestellt sowie ein finaler Clean-Up durchgeführt.
-## Termine
-Phase 1: 19.01
-Phase 2: 02.02 ?? -> Nachfragen zur Einschätzung des Aufwandes
-Phase 3.1: 16.02 -> Erster UI Prototyp zum Start von Semester fertig
-Phase 3.2: 06.04 -> UI fertigstellen
-Phase 4: 06.07
+Da die Datengewinnung aufwändig ist, werden die wichtigsten Daten zusammen mit den Vektoren und Ähnlichkeiten in einer Datenbank gespeichert.
 
 ## Deployment
 ### Images
-```bash
-$ echo $GITHUB_TOKEN | docker login ghcr.io -u blackrvn --password-stdin
-$ cd ./Politgraph/
-$ docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/blackrvn/politgraph-ui:latest --push -f ./politgraph.ui/Dockerfile .
-$ docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/blackrvn/politgraph-update:latest --push -f "politgraph.py/Dockerfile" "politgraph.py"
-```
-Wird ein Dockerimage auf [GitHub](https://github.com/blackrvn?tab=packages&repo_name=PolitGraph) veröffentlichen.
+Die Github workflows werden Images erstellen, auf die Registry pushen und sicherstellen, dass der Server die neuste Version pulled. 
 
-### Raspberry Pi Setup
-Um die Container auf dem Raspberry laufen zu lassen, müssen Umgebungsvariablen für die ConnectionStrings erstellt werden.
+### .env Setup
+Um die Container auf einem Server laufen lassen zu können werden folgende Umgebungsvariablen benötigt.
 ```bash
-$ mkdir ./politgraph
-$ cd ./politgraph
-$ nano .env
 POSTGRES=***
 READER_PASSWORD=***
 WRITER_PASSWORD=***
@@ -68,49 +26,7 @@ Das Script erstellt die Rollen (`reader`, `writer`) mit entsprechenden Berechtig
 > **Hinweis:** Das Script wird nur bei einem frischen Volume ausgeführt. Bei einem bestehenden Volume wird es ignoriert.
 
 ### Docker Compose
-```yml
-services:
-  politgraph-ui:
-    image: ghcr.io/blackrvn/politgraph-ui:latest
-    container_name: politgraph-ui
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__Read=${POLITGRAPH_DB_CONNECTION_READER}
-      - ConnectionStrings__Write=${POLITGRAPH_DB_CONNECTION_WRITER}
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-    depends_on:
-      - politgraph-db
-
-  politgraph-db:
-    image: postgres:18
-    container_name: politgraph-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES}
-      POSTGRES_DB: politgraph
-      READER_PASSWORD: ${READER_PASSWORD}
-      WRITER_PASSWORD: ${WRITER_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql
-      - ./init.sh:/docker-entrypoint-initdb.d/init.sh
-    ports:
-      - "5431:5432"
-    restart: unless-stopped
-
-  update:
-    image: ghcr.io/blackrvn/politgraph-update:latest
-    container_name: politgraph-update
-    environment:
-      - POLITGRAPH_DB_CONNECTION_WRITER=${POLITGRAPH_DB_CONNECTION_WRITER}
-    depends_on:
-      - politgraph-db
-    profiles: [update]
-
-volumes:
-  pgdata:
-```
+Die Container werden mit dem `docker-compose.yml` file orchestriert.
 
 ### Befehle
 ```bash
@@ -134,11 +50,10 @@ docker compose down
 ```
 
 ### Cronjob
-Der `update` Container wird monatlich am 1. über einen Cronjob auf dem Hostsystem gestartet:
+Der `update` Container wird immer montags über einen Cronjob auf dem Hostsystem gestartet:
 ```
-0 0 1 * * cd ~/politgraph/ && docker compose run --rm update >> /var/log/politgraph-update.log 2>&1
+0 0 * * 1 ~/politgraph/cron.update-db.sh
 ```
-
 
 ## Quellen
 
