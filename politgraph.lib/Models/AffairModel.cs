@@ -4,5 +4,6 @@
     {
         public int AffairId { get; set; }
         public string? Title { get; set; }
+        public string? UpdatedAt { get; set; }
     }
 }

@@ -84,22 +84,32 @@ export function showNodes(nodes) {
 }
 
 export function search(searchText, visibleParties, visibleStates) {
+
+    cy.elements().unselect();
+
+    if (searchText.trim() === "") {
+        cy.animate({
+            zoom: 0.25,
+            center: { eles: cy.elements() }
+        }, { duration: 300 });
+        return;
+    }
+
     let matches = cy.nodes().filter(function (ele) {
         let nameFilter = ele.data('label').toLowerCase().includes(searchText.toLowerCase());
         let partyFilter = visibleParties.includes(ele.data("party_group"));
         let stateFilter = visibleStates.includes(ele.data("state"));
         return partyFilter && stateFilter && nameFilter;
     });
-    let neighborhood = matches.neighborhood();
-    let nodesToShow = matches.union(neighborhood);
-    let nodesToHide = cy.nodes().difference(nodesToShow);
-
-    showNodes(nodesToShow);
-    hideNodes(nodesToHide);
 
     if (matches.length > 0) {
+        let firstMatch = matches[0];
         // setzt die aktuelle Auswahl auf das erste direkte Ergebnis (ohne Nachbaren)
-        matches[0].select();
+        firstMatch.select();
+        cy.animate({
+            zoom: 1.0,
+            center: { eles: firstMatch }
+        }, { duration: 300 });
     }
 }
 

@@ -68,7 +68,10 @@ else
         _member = _selectionService.Selection;
         if(_member != null)
         {
-            _affairs = await _db.GetAffairsOfMemberAsync(_member.MemberId);
+            _affairs = (await _db.GetAffairsOfMemberAsync(_member.MemberId))
+                .OrderBy(a => a.UpdatedAt)
+                .Reverse()
+                .ToList();
         }
         // Damit das UI aktuell bleibt
         await InvokeAsync(StateHasChanged);

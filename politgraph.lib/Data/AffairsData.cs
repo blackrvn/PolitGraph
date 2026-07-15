@@ -1,7 +1,8 @@
-﻿using politgraph.lib.Interfaces;
-using politgraph.lib.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+
+using politgraph.lib.Interfaces;
+using politgraph.lib.Models;
 
 namespace politgraph.lib.Data
 {
