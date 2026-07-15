@@ -1,6 +1,20 @@
-﻿.member-header{
-    display:flex;
+﻿.member-header {
+    display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
+    gap: 16px; 
+}
+
+.member-thumb {
+    width: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0; /* prevents the image from being squeezed by long text */
+}
+
+.member-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    gap: 4px;
 }

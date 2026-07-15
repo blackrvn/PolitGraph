@@ -12,9 +12,14 @@ else
 {
     <div class="container-fluid">
         <div class="member-header">
-            <h4>@(_member?.FirstName) @_member?.LastName</h4>
-            <p>@_member?.Party</p>
-            <p>@(_member?.MemberId)</p>
+            <img src="https://files.openparldata.ch/images/persons/original/CHE-@(_member?.MemberId)_v1.jpg"
+                 alt="@($"{_member?.FirstName} {_member?.LastName}")"
+                 class="member-thumb" />
+            <div class="member-info">
+                <h4>@(_member?.FirstName) @(_member?.LastName)</h4>
+                <p>@(_member?.MemberId)</p>
+                <p>@(_member?.Party)</p>
+            </div>
         </div>
 
 
@@ -35,7 +40,9 @@ else
                     @foreach (var affair in _affairs)
                     {
                         <tr>
-                            <td>@affair.AffairId</td>
+                            <td>
+                                <a target="_blank" href="https://openparldata.ch/item/affairs/@affair.AffairId">@affair.AffairId</a>
+                            </td>
                             <td>@affair.Title</td>
                         </tr>
                     }
@@ -71,4 +78,5 @@ else
     {
         _selectionService.OnSelectionChanged -= OnChanged;
     }
+
 }
