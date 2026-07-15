@@ -122,5 +122,8 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
   deploy:
+    # Must wait for the image to be pushed, otherwise the server pulls the
+    # previous :latest and the new build never reaches production.
+    needs: build
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
