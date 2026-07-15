@@ -1,0 +1,20 @@
+name: Docker - politgraph.ui
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "politgraph.ui/**"
+    # Publish semver tags as releases.
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "politgraph.ui/**"
+
+jobs:
+  docker:
+    uses: ./.github/workflows/docker_shared.yml
+    with:
+      dockerfile: politgraph.ui/Dockerfile
+    secrets: inherit
