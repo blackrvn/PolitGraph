@@ -32,7 +32,8 @@ on:
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ inputs.image_name }}
+  # GHCR requires the owner namespace: ghcr.io/<owner>/<image>
+  IMAGE_NAME: ${{ github.repository_owner }}/${{ inputs.image_name }}
   SERVER_DEPLOY_DIR: ~/politgraph/
 
 jobs:
