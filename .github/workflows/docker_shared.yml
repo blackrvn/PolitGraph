@@ -30,6 +30,7 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
+  SERVER_DEPLOY_DIR: ~/politgraph/
 
 jobs:
   build:
@@ -134,7 +135,25 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
           source: docker-compose.yml
-          target: ~/
+          target: ${{ env.SERVER_DEPLOY_DIR }}
+
+      - name: Copy init.sh to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: init.sh
+          target: ${{ env.SERVER_DEPLOY_DIR }}
+
+      - name: Copy cron.update-db.sh to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: cron.update-db.sh
+          target: ${{ env.SERVER_DEPLOY_DIR }}
 
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1.0.3
@@ -146,6 +165,7 @@ jobs:
             # Log in to GHCR on the server
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
+            cd ${{ env.SERVER_DEPLOY_DIR }}
             # Pull the images referenced by docker-compose.yml (image tag comes from
             # the server's .env, default :latest) and restart.
             docker compose pull

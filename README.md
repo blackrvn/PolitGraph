@@ -14,6 +14,10 @@ Die Github workflows werden Images erstellen, auf die Registry pushen und sicher
 ### .env Setup
 Um die Container auf einem Server laufen lassen zu können werden folgende Umgebungsvariablen benötigt.
 ```bash
+REGISTRY=ghcr.io
+IMAGE_NAME=blackrvn/politgraph
+TAG=latest
+
 POSTGRES=***
 READER_PASSWORD=***
 WRITER_PASSWORD=***
