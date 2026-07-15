@@ -21,6 +21,7 @@ jobs:
     uses: ./.github/workflows/docker_build.yml
     with:
       dockerfile: politgraph.ui/Dockerfile
+      image_name: "politgraph-ui"
     secrets: inherit
     permissions:
       contents: read
