@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]
     paths:
       - "politgraph.py/**"
+      - ".github/workflows/docker_build.yml"
+      - ".github/workflows/deploy_infra.yml"
+      - ".github/workflows/deploy.yml"
+      - ".github/workflows/publish_py.yml"
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
   pull_request:
@@ -14,7 +18,7 @@ on:
 
 jobs:
   docker:
-    uses: ./.github/workflows/docker_shared.yml
+    uses: ./.github/workflows/docker_build.yml
     with:
       dockerfile: politgraph.py/Dockerfile
     secrets: inherit

@@ -118,55 +118,5 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
   deploy:
-    needs: build
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Ship the compose file to the server so `docker compose` runs against the
-      # committed version. The .env (with the DB password) stays on the server and
-      # is never copied from the repo.
-      - name: Copy docker-compose.yml to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          source: docker-compose.yml
-          target: ${{ env.SERVER_DEPLOY_DIR }}
-
-      - name: Copy init.sh to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          source: init.sh
-          target: ${{ env.SERVER_DEPLOY_DIR }}
-
-      - name: Copy cron.update-db.sh to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          source: cron.update-db.sh
-          target: ${{ env.SERVER_DEPLOY_DIR }}
-
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            # Log in to GHCR on the server
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
-            cd ${{ env.SERVER_DEPLOY_DIR }}
-            # Pull the images referenced by docker-compose.yml (image tag comes from
-            # the server's .env, default :latest) and restart.
-            docker compose pull
-            docker compose up -d --remove-orphans
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
