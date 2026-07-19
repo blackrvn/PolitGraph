@@ -1,0 +1,16 @@
+:root{
+  --black:#1c1b18; 
+  --white:#fff;
+  
+  --graph-edge:#c3cad9; 
+  --graph-node:#aeb6c9;
+  --graph-node-dim:#cdd3e0;
+  --graph-accent:#6366f1;
+
+  --text-secondary:#4b5563;
+  --hairline:rgba(0,0,0,.1);
+  --card-radius:12px;
+  --card-shadow:0 14px 34px rgba(0,0,0,.14);
+
+  --ease: 180ms ease;
+}

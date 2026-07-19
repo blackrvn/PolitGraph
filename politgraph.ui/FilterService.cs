@@ -17,7 +17,7 @@ namespace politgraph.ui
                 if (value != _searchText)
                 {
                     _searchText = value;
-                    SearchTextChanged();
+                    Task.Run(()=>SearchTextChanged());
                 }
             }
         }
@@ -44,8 +44,8 @@ namespace politgraph.ui
 
         public FilterService()
         {
-            SelectedParties.CollectionChanged += (sender, e) => FilterChanged();
-            SelectedStates.CollectionChanged += (sender, e) => FilterChanged();
+            SelectedParties.CollectionChanged += (sender, e) => Task.Run(()=>FilterChanged());
+            SelectedStates.CollectionChanged += (sender, e) => Task.Run(()=>FilterChanged());
         }
 
         public void AssignModule(IJSObjectReference module)

@@ -2,7 +2,33 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    gap: 16px; 
+    gap: 16px;
+    flex: 0 0 auto;
+    padding-right: 24px;
+}
+
+.detail-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--ease), color var(--ease);
+}
+.detail-close:hover {
+    background: #f3f4f6;
+    color: var(--black);
 }
 
 .member-thumb {
@@ -17,4 +43,26 @@
     flex-direction: column;
     justify-content: center; 
     gap: 4px;
+}
+
+.affairs-scroll{
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+.affairs-scroll thead th {
+    position: sticky;
+    top: 0;
+    background: var(--white);
+}
+
+.affairs-scroll a {
+    color: var(--graph-accent);
+    text-decoration: none;
+    transition: color var(--ease);
+}
+.affairs-scroll a:hover {
+    color: var(--black);
+    text-decoration: underline;
 }

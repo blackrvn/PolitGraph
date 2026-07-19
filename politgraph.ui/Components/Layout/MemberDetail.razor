@@ -2,15 +2,10 @@
 @inject IAffairsData _db
 @implements IDisposable
 
-@if(_member == null)
+@if (_member != null)
 {
-    <div>
-        <h4>Keine Auswahl</h4>
-    </div>
-}
-else
-{
-    <div class="container-fluid">
+    <div class="pg-card">
+        <button type="button" class="detail-close" aria-label="Schließen" @onclick="Close">&times;</button>
         <div class="member-header">
             <img src="https://files.openparldata.ch/images/persons/original/CHE-@(_member?.MemberId)_v1.jpg"
                  alt="@($"{_member?.FirstName} {_member?.LastName}")"
@@ -29,25 +24,28 @@ else
         }
         else
         {
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Titel</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var affair in _affairs)
-                    {
+            <div class="affairs-scroll">
+                <table class="table">
+                    <thead>
                         <tr>
-                            <td>
-                                <a target="_blank" href="https://openparldata.ch/item/affairs/@affair.AffairId">@affair.AffairId</a>
-                            </td>
-                            <td>@affair.Title</td>
+                            <th>ID</th>
+                            <th>Titel</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var affair in _affairs)
+                        {
+                            <tr>
+                                <td>
+                                    <a target="_blank" href="https://openparldata.ch/item/affairs/@affair.AffairId">@affair.AffairId</a>
+                                </td>
+                                <td>@affair.Title</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                </div>
+
         }
     </div>
 }
@@ -62,6 +60,8 @@ else
 
         _selectionService.OnSelectionChanged += OnChanged;
     }
+
+    private void Close() => _selectionService.SetSelection(null);
 
     private async void OnChanged()
     {

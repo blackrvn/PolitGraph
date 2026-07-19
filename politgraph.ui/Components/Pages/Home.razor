@@ -3,17 +3,13 @@
 @rendermode InteractiveServer
 @inject IFilterService _filterService
 
-<div class="home-grid">
-    <aside class="filter-container">
-        <Filter />
-    </aside>
-
+<div class="home-stage">
     <section class="graph-container">
         <SearchBox OnSearch="OnSearchTextChanged"/>
         <MembersGraph />
     </section>
 
-    <aside class="detail-container">
+    <aside class="detail-overlay">
         <MemberDetail />
     </aside>
 </div>

@@ -23,13 +23,13 @@
 
         private static readonly IReadOnlyDictionary<string, string> Colors = new Dictionary<string, string>
         {
-            ["SP"] = "#ff0000",
-            ["SVP"] = "#007832",
-            ["FDP-Liberale"] = "#0044d5",
-            ["M-E"] = "#fb7203",
-            ["glp"] = "#7e3874",
-            ["GRÜNE"] = "#03f61a",
-            ["Andere"] = "#999"
+            ["SP"] = "#e14b4b",
+            ["SVP"] = "#1D5936",
+            ["FDP-Liberale"] = "#3f6fd6",
+            ["M-E"] = "#e0913f",
+            ["glp"] = "#8f5285",
+            ["GRÜNE"] = "#57a05a",
+            ["Andere"] = "#aeb6c9"
         };
 
         public static IEnumerable<string> GetPartyGroups()

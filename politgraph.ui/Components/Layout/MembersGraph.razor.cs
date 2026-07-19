@@ -31,6 +31,44 @@ namespace politgraph.ui.Components.Layout
         protected override async Task OnInitializedAsync()
         {
             Parties = await _db.GetPartiesAsync();
+            _filterService.SetSelectedPartiesDefault(FilterGroups.GetPartyGroups());
+            _filterService.SetSelectedStatesDefault(FilterGroups.GetStateGroups());
+            _selectionService.OnSelectionChanged += HandleSelectionChanged;
+        }
+
+        // Keep the graph's Cytoscape selection in sync when the selection is
+        // cleared elsewhere (e.g. the pop-over close button), so the node ring
+        // clears and the same node can be picked again.
+        private async void HandleSelectionChanged()
+        {
+            if (_selectionService.Selection == null && Module != null)
+            {
+                try
+                {
+                    await Module.InvokeVoidAsync("deselect");
+                }
+                catch (JSDisconnectedException) { }
+            }
+        }
+
+        private bool IsPartyOn(string party) => _filterService.SelectedParties?.Contains(party) ?? true;
+        private bool IsStateOn(string state) => _filterService.SelectedStates?.Contains(state) ?? true;
+
+        private string PartyPillClass(string party) => IsPartyOn(party) ? "pill" : "pill pill--off";
+        private string StatePillClass(string state) => IsStateOn(state) ? "pill" : "pill pill--off";
+
+        private void ToggleParty(string party)
+        {
+            var set = _filterService.SelectedParties;
+            if (set == null) return;
+            if (!set.Remove(party)) set.Add(party);
+        }
+
+        private void ToggleState(string state)
+        {
+            var set = _filterService.SelectedStates;
+            if (set == null) return;
+            if (!set.Remove(state)) set.Add(state);
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -51,6 +89,7 @@ namespace politgraph.ui.Components.Layout
 
         public async ValueTask DisposeAsync()
         {
+            _selectionService.OnSelectionChanged -= HandleSelectionChanged;
             _dotNetRef?.Dispose();
             if (Module != null)
             {

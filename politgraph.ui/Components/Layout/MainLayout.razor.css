@@ -15,11 +15,17 @@
     gap: 32px;
     min-height: contain;
     padding: 16px;
-    border-bottom: 1px solid;
+    border-bottom: 1px solid var(--hairline);
 }
 
-.title {
-    font-family: 'Swiss 721';
-    font-size: 48px;
+.top-row a{ color: var(--black); }
+.top-row a:hover{ color: var(--graph-accent); }
+
+@media (max-width: 900px) {
+    .app-shell { grid-template-rows: 88px 1fr; }
 }
 
+@media (max-width: 600px) {
+    .app-shell { grid-template-rows: 60px 1fr; }
+    .top-row { gap: 12px; padding: 12px; font-size: .9rem; }
+}

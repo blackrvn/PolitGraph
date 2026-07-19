@@ -1,5 +1,14 @@
 ﻿let cy;
 
+// Diagonal hatch (Schraffur) as a tileable SVG data URI, coloured per node.
+function hatch(color) {
+    const svg =
+        "<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'>" +
+        "<path d='M0,8 L8,0 M-2,2 L2,-2 M6,10 L10,6' stroke='" + color + "' stroke-width='1.5'/>" +
+        "</svg>";
+    return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
+
 
 export function create(container, payload, dotNetRef) {
     if (typeof payload === "string") payload = JSON.parse(payload);
@@ -16,32 +25,52 @@ export function create(container, payload, dotNetRef) {
         },
 
         style: [
-            {
-                selector: "node",
-                style: {
-                    "background-color": (ele) => ele.data("color"),
-                    "border-width": 1,
-                    "border-color": "#333",
-                    "text-valign": "center",
-                    "text-halign": "center",
-                    "font-size": 10,
-                    "background-blacken": -0.5, //[-1, 1[ -> -1 heller, 1 dunkler
-                }
+        {
+            selector: "node",
+            style: {
+            "background-color": (ele) => ele.data("color"),
+            "border-width": 3,
+            "border-color": "#ffffff",
+            "border-opacity": 1,
+            "text-valign": "center",
+            "text-halign": "center",
+            "font-size": 10,
             },
-            {
-                selector: "edge",
-                style: {
-                    width: 2,
-                    "line-color": "#bbb",
-                }
+        },
+        {
+            selector: 'node[state = "Inaktiv"]',
+            style: {
+                "background-color": "#ffffff",
+                "background-image": (ele) => hatch(ele.data("color")),
+                "background-repeat": "repeat",
+                "background-width": "8px",
+                "background-height": "8px",
+                "background-fit": "none",
+                "border-style": "dotted",
+                "border-color": (ele) => ele.data("color"),
+                "border-width": 2,
             },
-            {
-                selector: ":selected",
-                style: {
-                    "opacity": 1.0,
-                    "background-blacken": 0,
-                }
-            }
+        },
+        {
+            selector: "edge",
+            style: { width: 2, "line-color": "#c3cad9" },
+        },
+        {
+            selector: "node.hovered",
+            style: {
+                "underlay-color": "#6366f1",
+                "underlay-opacity": 0.18,
+                "underlay-padding": 5,
+            },
+        },
+        {
+            selector: "node:selected",
+            style: {
+                "underlay-color": "#6366f1",
+                "underlay-opacity": 0.3,
+                "underlay-padding": 7,
+            },
+        },
         ]
     });
 
@@ -65,6 +94,9 @@ export function create(container, payload, dotNetRef) {
     cy.on('layoutstop', () => {
         cy.autolock(true);
     });
+
+    cy.on('mouseover', 'node', (e) => e.target.addClass('hovered'));
+    cy.on('mouseout',  'node', (e) => e.target.removeClass('hovered'));
 }
 
 export function hideNodes(nodes) {
@@ -125,6 +157,10 @@ export function filter(visibleParties, visibleStates) {
 
     showNodes(nodesToShow);
     hideNodes(nodesToHide);
+}
+
+export function deselect() {
+    if (cy) cy.elements().unselect();
 }
 
 export function dispose() {

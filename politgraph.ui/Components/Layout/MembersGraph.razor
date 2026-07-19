@@ -9,19 +9,27 @@
         }
         else
         {
-            <table class="table table-transparent">
-                <tbody>
-                    @foreach (var party in FilterGroups.GetPartyGroups())
-                    {
-                        <tr>
-                            <td>
-                                <div class="legend-color" style="background-color: @FilterGroups.GetColorForParty(party);"></div>
-                            </td>
-                            <td>@party</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            @foreach (var party in FilterGroups.GetPartyGroups())
+            {
+                <button type="button" class="@PartyPillClass(party)" aria-pressed="@IsPartyOn(party)"
+                        @onclick="() => ToggleParty(party)">
+                    <span class="pill__dot" style="background-color:@FilterGroups.GetColorForParty(party)"></span>
+                    @party
+                </button>
+            }
+
+            <span class="legend-sep"></span>
+
+            <button type="button" class='@StatePillClass("Aktiv")' aria-pressed='@IsStateOn("Aktiv")'
+                    @onclick='() => ToggleState("Aktiv")'>
+                <span class="pill__dot pill__dot--active"></span>
+                Aktiv
+            </button>
+            <button type="button" class='@StatePillClass("Inaktiv")' aria-pressed='@IsStateOn("Inaktiv")'
+                    @onclick='() => ToggleState("Inaktiv")'>
+                <span class="pill__dot pill__dot--inactive"></span>
+                Inaktiv
+            </button>
         }
     </div>
 </div>
