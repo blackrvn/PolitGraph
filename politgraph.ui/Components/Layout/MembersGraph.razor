@@ -1,6 +1,7 @@
 ﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-<div @ref=GraphContainer class="cy">
+<div class="cy-wrap">
+    <div @ref=GraphContainer class="cy"></div>
 
     <div class="legend">
         @if (Parties == null)

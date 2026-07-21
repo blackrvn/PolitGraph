@@ -158,6 +158,20 @@ export function create(container, payload, dotNetRef) {
     });
     cy.on('mousemove', 'edge', positionTooltip);
     cy.on('mouseout', 'edge', () => { edgeTooltip.style.opacity = "0"; });
+
+    // Touch-Geräte kennen kein Hover: Tippen auf eine Kante zeigt die
+    // Ähnlichkeit, Tippen auf Hintergrund oder Knoten blendet sie wieder aus.
+    cy.on('tap', 'edge', (e) => {
+        const w = e.target.data("weight") ?? 0;
+        edgeTooltip.textContent = "Ähnlichkeit: " + Math.round(w * 100) + "%";
+        positionTooltip(e);
+        edgeTooltip.style.opacity = "1";
+    });
+    cy.on('tap', (e) => {
+        if (e.target === cy || (e.target.isNode && e.target.isNode())) {
+            edgeTooltip.style.opacity = "0";
+        }
+    });
 }
 
 export function hideNodes(nodes) {

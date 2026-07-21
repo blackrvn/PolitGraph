@@ -11,7 +11,7 @@
 
 .detail-overlay {
     position: absolute;
-    top: 68px;                 /* clear the full-width search bar */
+    top: 76px;                 /* clear the full-width search bar */
     right: 16px;
     bottom: 16px;
     width: 440px;

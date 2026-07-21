@@ -1,4 +1,9 @@
-﻿.cy {
+﻿.cy-wrap {
+    position: relative;
+    height: 100%;
+}
+
+.cy {
     height: 100%;
     position: relative
 }
@@ -15,6 +20,11 @@
   flex-direction:column;
   align-items:flex-start;
   gap:.4rem;
+  touch-action:manipulation;
+}
+
+.legend button{
+  touch-action:manipulation;
 }
 
 .legend-sep{
