@@ -16,7 +16,7 @@ namespace politgraph.ui.Components.Layout
         private IJSObjectReference? Module { get; set; }
         private ElementReference GraphContainer { get; set; }
 
-        private List<string> Parties { get; set; }
+        private List<string>? Parties { get; set; }
 
         private EventCallback<string> SelectionChanged { get; set; }
 
@@ -36,9 +36,6 @@ namespace politgraph.ui.Components.Layout
             _selectionService.OnSelectionChanged += HandleSelectionChanged;
         }
 
-        // Keep the graph's Cytoscape selection in sync when the selection is
-        // cleared elsewhere (e.g. the pop-over close button), so the node ring
-        // clears and the same node can be picked again.
         private async void HandleSelectionChanged()
         {
             if (_selectionService.Selection == null && Module != null)

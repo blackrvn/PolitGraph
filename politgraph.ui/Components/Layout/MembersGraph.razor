@@ -9,6 +9,7 @@
         }
         else
         {
+            <span class="legend-title">Partei</span>
             @foreach (var party in FilterGroups.GetPartyGroups())
             {
                 <button type="button" class="@PartyPillClass(party)" aria-pressed="@IsPartyOn(party)"
@@ -20,6 +21,7 @@
 
             <span class="legend-sep"></span>
 
+            <span class="legend-title">Status</span>
             <button type="button" class='@StatePillClass("Aktiv")' aria-pressed='@IsStateOn("Aktiv")'
                     @onclick='() => ToggleState("Aktiv")'>
                 <span class="pill__dot pill__dot--active"></span>
@@ -30,6 +32,22 @@
                 <span class="pill__dot pill__dot--inactive"></span>
                 Inaktiv
             </button>
+
+            <span class="legend-sep"></span>
+
+            <span class="legend-title">Ähnlichkeit</span>
+            <span class="edge-item">
+                <span class="edge-sample edge-sample--high"></span>
+                Hoch
+            </span>
+            <span class="edge-item">
+                <span class="edge-sample edge-sample--mid"></span>
+                Mittel
+            </span>
+            <span class="edge-item">
+                <span class="edge-sample edge-sample--low"></span>
+                Gering
+            </span>
         }
     </div>
 </div>
